@@ -1,22 +1,46 @@
 // script.js
-const toggle = document.getElementById('theme-toggle');
+document.addEventListener('DOMContentLoaded', () => {
+  const card = document.querySelector('.card');
+  if (!card) return;
 
-// Проверяем предпочтения системы
-const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  // Максимальный угол наклона (в градусах)
+  const maxTilt = 5;
 
-// Или сохранённую тему
-const savedTheme = localStorage.getItem('theme');
-const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+  // Отслеживаем движение мыши
+  document.addEventListener('mousemove', (e) => {
+    // Получаем размеры окна
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
 
-document.documentElement.setAttribute('data-theme', initialTheme);
-toggle.textContent = initialTheme === 'dark' ? '☀️' : '🌙';
+    // Получаем положение курсора (от 0 до 1)
+    const mouseX = e.clientX / windowWidth;
+    const mouseY = e.clientY / windowHeight;
 
-toggle.addEventListener('click', () => {
-  const currentTheme = document.documentElement.getAttribute('data-theme');
-  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    // Рассчитываем наклон: от -maxTilt до +maxTilt
+    // Когда курсор слева — карточка наклоняется влево (отрицательный rotateY)
+    // Когда курсор сверху — карточка наклоняется вверх (отрицательный rotateX)
+    const rotateY = (mouseX - 0.5) * maxTilt * 2; // -5° до +5° по горизонтали
+    const rotateX = (mouseY - 0.5) * maxTilt * 2; // -5° до +5° по вертикали
 
-  document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
+    // Применяем трансформацию
+    card.style.transform = `
+      perspective(1000px)
+      rotateX(${-rotateX}deg)
+      rotateY(${rotateY}deg)
+      translateY(-5px)
+    `;
 
-  toggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    // Дополнительно: можно добавить плавное затухание при уходе мыши
+  });
+
+  // Сбрасываем наклон, когда мышь уходит
+  document.addEventListener('mouseleave', () => {
+    card.style.transition = 'transform 0.5s ease-out';
+    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(-5px)';
+  });
+
+  // Возвращаем плавность при движении
+  document.addEventListener('mousemove', () => {
+    card.style.transition = 'transform 0.08s ease-out';
+  });
 });

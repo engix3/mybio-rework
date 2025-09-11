@@ -1,4 +1,4 @@
-/* style.css */
+/* === АНИМАЦИЯ ПРИ ЗАГРУЗКЕ (оставляем как есть) === */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -12,13 +12,16 @@
 
 .card {
   animation: fadeIn 0.8s ease-out forwards;
+  transition: transform 0.08s ease-out;
+  transform-style: preserve-3d; /* Сохраняет 3D-эффект */
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.3);
 }
 
 .avatar,
 h1,
 .bio,
 .discord-status,
-.social-links,
+.social-icons,
 .theme-toggle {
   opacity: 0;
   transform: translateY(10px);
@@ -26,87 +29,106 @@ h1,
   animation-delay: 0.2s;
 }
 
-:root {
-  --bg: #f9fafb;
-  --text: #1f2937;
-  --card-bg: #ffffff;
-  --border: #e5e7eb;
-  --shadow: rgba(0, 0, 0, 0.05);
-  --btn-bg: #f3f4f6;
-  --btn-hover: #e5e7eb;
-  --status-online: #10b981; /* убираем зелёный */
-  --accent: #6b7280; /* новый нейтральный акцент */
-}
-
-[data-theme="dark"] {
-  --bg: #111827;
-  --text: #f9fafb;
-  --card-bg: #1f2937;
-  --border: #374151;
-  --shadow: rgba(0, 0, 0, 0.2);
-  --btn-bg: #374151;
-  --btn-hover: #4b5563;
-  --accent: #9ca3af; /* светло-серый акцент */
-  --status-online: #6b7280; /* теперь серый */
-}
-
+/* === УДАЛЯЕМ ТЕМЫ → ФИКСИРУЕМ ТЁМНЫЙ СТИЛЬ === */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* Убираем ВСЕ отступы у body и html */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Запрещаем скролл */
+}
+
 body {
   font-family: 'Inter', sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  background: #000;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 1rem;
-  transition: background 0.3s ease;
+  /* УБРАЛИ padding: 1rem; ← это было причиной! */
+  position: relative;
 }
 
+/* Фоновое видео — теперь точно на весь экран */
+.video-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;    /* Viewport Width */
+  height: 100vh;   /* Viewport Height */
+  z-index: -1;
+  overflow: hidden;
+}
+
+.video-bg video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  object-fit: cover; /* Заполняет весь экран, обрезая края при необходимости */
+}
+
+/* === КОНТЕЙНЕР (оставляем как есть) === */
 .container {
   width: 100%;
   max-width: 420px;
 }
 
+/* === КАРТОЧКА — СТАНОВИТСЯ ПРОЗРАЧНОЙ С ЭФФЕКТОМ СТЕКЛА === */
 .card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.08); /* Полупрозрачный белый */
+  backdrop-filter: blur(3px); /* Эффект стекла */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15); /* Светлая граница */
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 10px 25px var(--shadow);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.3); /* Усиливаем тень */
   text-align: center;
   position: relative;
+  z-index: 10;
 }
 
+/* === АВАТАР (оставляем, но подправим границу под стиль) === */
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  border: 3px solid var(--border);
+  border: 3px solid rgba(255, 255, 255, 0.2); /* Прозрачная граница */
   object-fit: cover;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 8px var(--shadow);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+/* === ТЕКСТ (белый, с лёгкой тенью для читаемости) === */
 h1 {
   font-size: 1.75rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
 
 .bio {
   font-size: 0.95rem;
-  color: var(--text);
+  color: rgba(255, 255, 255, 0.85); /* Полупрозрачный белый */
   opacity: 0.85;
   margin-bottom: 1.5rem;
   line-height: 1.5;
 }
 
+/* === DISCORD STATUS (подправим цвета) === */
 .discord-status {
   display: flex;
   align-items: center;
@@ -114,7 +136,7 @@ h1 {
   gap: 0.5rem;
   margin-bottom: 2rem;
   font-size: 0.9rem;
-  color: var(--text);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .status-dot {
@@ -122,91 +144,7 @@ h1 {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: var(--status-online);
-  margin-right: 0.5rem;
-}
-
-/* Убираем пульс */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.status-dot.online {
-  background-color: var(--status-online);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.social-links {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.social-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: var(--btn-bg);
-  color: var(--text);
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.95rem;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-
-.social-btn:hover {
-  background: var(--btn-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-
-.theme-toggle {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: var(--text);
-  opacity: 0.7;
-  transition: opacity 0.2s;
-}
-
-.theme-toggle:hover {
-  opacity: 1;
-}
-
-/* Mobile First */
-@media (max-width: 480px) {
-  .card {
-    padding: 1.5rem;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-  }
-
-  .social-links {
-    gap: 0.5rem;
-  }
-
-  .social-btn {
-    padding: 0.65rem 0.8rem;
-    font-size: 0.9rem;
-  }
+  background-color: #b388ff; /* Фиолетовый акцент вместо серого */
 }
 
 .status-avatar {
@@ -215,7 +153,7 @@ h1 {
   border-radius: 50%;
   overflow: hidden;
   margin-right: 0.5rem;
-  border: 2px solid var(--border);
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .status-avatar img {
@@ -229,12 +167,105 @@ h1 {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  color: var(--text);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .status-message {
   font-family: 'Courier New', monospace;
   font-style: italic;
-  color: #8b5cf6; /* фиолетовый — чтобы выделялся */
+  color: #b388ff; /* Фиолетовый — выделяется на тёмном фоне */
   opacity: 0.8;
+}
+
+/* === ИКОНКИ СОЦСЕТЕЙ (белые, с hover-эффектом) === */
+.social-icons {
+  display: flex;
+  gap: 0.1rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.social-icons a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8); /* Светлые иконки */
+  text-decoration: none;
+  transition: transform 0.2s, color 0.2s;
+  border-radius: 8px;
+  padding: 0.4rem;
+}
+
+.social-icons a:hover {
+  color: #ffffff; /* Белый при наведении */
+  transform: translateY(-3px);
+}
+
+/* === ТУЛТИПЫ (под тёмный фон) === */
+.social-icons a::before {
+  content: attr(aria-label);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: rgba(0, 0, 0, 0.7); /* Тёмный полупрозрачный фон */
+  color: #ffffff; /* Белый текст */
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+
+.social-icons a:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* === УДАЛЯЕМ КНОПКУ ТЕМЫ (скрываем, если осталась) === */
+.theme-toggle {
+  display: none !important;
+}
+
+/* === АДАПТИВ ПОД МОБИЛЬНЫЕ (оставляем) === */
+@media (max-width: 480px) {
+  .card {
+    padding: 1.5rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .social-icons {
+    gap: 0.3rem;
+  }
+}
+
+/* Виньетка — только углы */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: 
+    /* Верхний левый угол */
+    radial-gradient(circle at 0% 0%, rgba(0,0,0,0.7) 0%, transparent 50%),
+    /* Верхний правый угол */
+    radial-gradient(circle at 100% 0%, rgba(0,0,0,0.7) 0%, transparent 50%),
+    /* Нижний левый угол */
+    radial-gradient(circle at 0% 100%, rgba(0,0,0,0.7) 0%, transparent 50%),
+    /* Нижний правый угол */
+    radial-gradient(circle at 100% 100%, rgba(0,0,0,0.7) 0%, transparent 50%);
+  z-index: 5;
 }
