@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!card) return;
 
   // Максимальный угол наклона (в градусах)
-  const maxTilt = 5;
+  const maxTilt = 10;
 
   // Отслеживаем движение мыши
   document.addEventListener('mousemove', (e) => {

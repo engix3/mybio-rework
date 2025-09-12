@@ -16,10 +16,22 @@
     <source src="videos/my-bg.webm" type="video/webm">
     <!-- Запасной вариант — можно заменить на свой webm -->
   </video>
-</div
+</div>
 
-  <div class="container">
-    <div class="card">
+<div class="video-bg">
+  <video autoplay muted loop playsinline>
+    <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-particle-background-abstract-technology-25070-large.mp4" type="video/mp4">
+  </video>
+</div>
+
+<!-- Частицы поверх видео -->
+<canvas id="particles-canvas"></canvas>
+
+
+  <!-- Обёртка для всего контента -->
+  <div class="content-wrapper">
+    <div class="container">
+      <div class="card">
       <img src="images/avatar.jpg" alt="engi" class="avatar" />
 
       <h1>engi</h1>
@@ -30,14 +42,13 @@
       <!-- Discord Status -->
       <div class="discord-status">
         <div class="status-avatar">
-          <img src="https://cdn.discordapp.com/avatars/1257675618175422576/cd67748ce05bede0ce56a3e3b339f7d2.webp?size=128" alt="Avatar" />
+          <img src="images/avatar.jpg" alt="Avatar" />
         </div>
         <div class="status-text">
           <strong>engi</strong>
           <span class="status-message">online</span>
         </div>
       </div>
-
 <!-- Social Links -->
 <div class="social-icons">
   <a href="https://github.com/engix3" target="_blank" aria-label="GitHub">
@@ -70,10 +81,13 @@
       <path d="M 12.125 1.9980469 A 1.0001 1.0001 0 0 0 11.199219 2.7441406 L 2.0332031 37.576172 A 1.0001 1.0001 0 0 0 2.7460938 38.798828 L 37.580078 47.966797 A 1.0001 1.0001 0 0 0 38.802734 47.253906 L 47.96875 12.419922 A 1.0001 1.0001 0 0 0 47.255859 11.197266 L 12.421875 2.03125 A 1.0001 1.0001 0 0 0 12.125 1.9980469 z M 21.5 19 L 31 21.5 L 28.5 31 L 19 28.5 L 21.5 19 z"/>
     </svg>
   </a>
-</div>
+      </div>
     </div>
   </div>
 
-  <script src="script.js" defer></script>
+  
+<script src="script.js" defer></script>
+<script src="particles.js" defer></script>
+
 </body>
 </html>
