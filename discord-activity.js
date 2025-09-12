@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusIndicator = document.getElementById('status-indicator');
   const activityIcon = document.getElementById('activity-icon');
   const activityText = document.getElementById('activity-text');
+  const verifiedBadge = document.querySelector('.verified-badge'); // Галочка
 
   async function updateStatus() {
     try {
@@ -15,9 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (data.status === 'dnd') statusIndicator.style.backgroundColor = '#f04747';
       else statusIndicator.style.backgroundColor = '#747f8d';
 
-      // Обновляем текст активности
-      let activityTextContent = data.activity.name;
-      let activityType = data.activity.type;
+      // Определяем текст активности
+      let activityTextContent = 'нет активности в Discord';
+      let activityType = 'custom';
+
+      if (data.activity && data.activity.name) {
+        activityType = data.activity.type;
+        activityTextContent = data.activity.name; // Берём полное название — "играет в Roblox"
+      }
 
       // Обновляем иконку
       if (activityType === 'game') {
@@ -30,15 +36,25 @@ document.addEventListener('DOMContentLoaded', () => {
         activityIcon.style.backgroundImage = "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"white\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z\"/></svg>')";
       }
 
+      // Обновляем текст
       activityText.textContent = activityTextContent;
       activityText.title = activityTextContent;
+
+      // Показываем/скрываем галочку
+      if (activityTextContent === 'нет активности в Discord') {
+        verifiedBadge.style.display = 'none';
+      } else {
+        verifiedBadge.style.display = 'inline-flex';
+      }
 
     } catch (err) {
       console.error('❌ Ошибка загрузки статуса:', err);
       activityText.textContent = 'ошибка подключения';
+      verifiedBadge.style.display = 'none'; // Скрываем галочку при ошибке
     }
   }
 
+  // Обновляем каждые 5 секунд
   updateStatus();
   setInterval(updateStatus, 5000);
 });
