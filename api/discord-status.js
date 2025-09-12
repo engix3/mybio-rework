@@ -18,13 +18,20 @@ export default async function handler(req, res) {
     const member = guild?.members.cache.get('1257675618175422576');
 
     let status = 'offline';
-    let activity = '';
+    let activity = { type: 'custom', name: 'оффлайн' };
 
     if (member?.presence) {
       status = member.presence.status;
       if (member.presence.activities.length > 0) {
         const act = member.presence.activities[0];
-        activity = `${act.name}${act.details ? `: ${act.details}` : ''}`;
+        activity = {
+          type: getActivityType(act),
+          name: act.name || 'активность',
+          details: act.details || '',
+          state: act.state || ''
+        };
+      } else {
+        activity = { type: 'custom', name: 'в сети' };
       }
     }
 
@@ -41,4 +48,11 @@ export default async function handler(req, res) {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+}
+
+function getActivityType(activity) {
+  if (activity.name?.includes('Spotify')) return 'music';
+  if (activity.type === 1) return 'stream';
+  if (activity.type === 0) return 'game';
+  return 'custom';
 }
