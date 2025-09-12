@@ -20,6 +20,6 @@ async function updateDiscordStatus() {
   }
 }
 
-// Обновляем каждые 30 секунд
+// Обновляем каждые 5 секунд
 updateDiscordStatus();
-setInterval(updateDiscordStatus, 30000);
+setInterval(updateDiscordStatus, 5000);
