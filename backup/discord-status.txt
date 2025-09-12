@@ -13,12 +13,12 @@ export default async function handler(req, res) {
 
     await client.login(process.env.DISCORD_BOT_TOKEN);
 
-    const user = await client.users.fetch('1257675618175422576');
+    const user = await client.users.fetch('1257675618175422576'); // Твой ID
     const guild = client.guilds.cache.first();
     const member = guild?.members.cache.get('1257675618175422576');
 
     let status = 'offline';
-    let activity = { type: 'custom', name: 'нет активности в Discord' };
+    let activity = { type: 'custom', name: 'оффлайн' };
 
     if (member?.presence) {
       status = member.presence.status;
@@ -26,8 +26,12 @@ export default async function handler(req, res) {
         const act = member.presence.activities[0];
         activity = {
           type: getActivityType(act),
-          name: act.name || 'активность'
+          name: act.name || 'активность',
+          details: act.details || '',
+          state: act.state || ''
         };
+      } else {
+        activity = { type: 'custom', name: 'нет активности в Discord' };
       }
     }
 
