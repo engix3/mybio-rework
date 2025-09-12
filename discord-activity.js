@@ -32,25 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
         activityIcon.style.backgroundImage = "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"white\"><path d=\"M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z\"/></svg>')";
       } else if (activityType === 'stream') {
         activityIcon.style.backgroundImage = "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"white\"><path d=\"M4 6h16v12H4V6m16-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z\"/><path d=\"M6 8h2v8H6V8m4 0h2v8h-2V8m4 0h2v8h-2V8z\"/></svg>')";
-      } else {
-        activityIcon.style.backgroundImage = "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"white\"><path d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z\"/></svg>')";
       }
 
       // Обновляем текст
       activityText.textContent = activityTextContent;
       activityText.title = activityTextContent;
 
-      // Показываем/скрываем галочку
-      if (activityTextContent === 'нет активности в Discord') {
-        verifiedBadge.style.display = 'none';
-      } else {
-        verifiedBadge.style.display = 'inline-flex';
-      }
-
     } catch (err) {
       console.error('❌ Ошибка загрузки статуса:', err);
       activityText.textContent = 'ошибка подключения';
-      verifiedBadge.style.display = 'none'; // Скрываем галочку при ошибке
     }
   }
 

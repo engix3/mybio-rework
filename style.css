@@ -472,6 +472,7 @@ body::before {
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 0.2rem;
+  margin-left: -240px;
 }
 
 .status-activity {
