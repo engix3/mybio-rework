@@ -37,6 +37,7 @@
 <!-- Контейнер для текста с частицами -->
 <div class="text-with-particles">
   <h1 class="glow-text">engi</h1>
+  <canvas id="text-particles-canvas"></canvas>
   <span class="verified-badge" aria-label="Верифицированный аккаунт">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
@@ -68,10 +69,10 @@
         <div class="status-avatar">
           <img src="images/avatar.jpg" alt="Avatar" />
         </div>
-<div class="status-text">
-  <strong>engi</strong>
-  <span class="status-message" id="discord-activity">Загрузка...</span>
-</div>
+        <div class="status-text">
+          <strong>engi</strong>
+          <span class="status-message">soon...</span>
+        </div>
       </div>
 <!-- Social Links -->
 <div class="social-icons">
@@ -109,9 +110,10 @@
     </div>
   </div>
 
-<script src="discord-client.js"></script>
+  
 <script src="script.js" defer></script>
 <script src="particles.js" defer></script>
+<script src="text-particles.js" defer></script>
 
 </body>
 </html>
