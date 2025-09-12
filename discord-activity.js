@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Обновляем каждые 15 секунд (уменьшили задержку)
+  // Обновляем каждые 5 секунд (уменьшили задержку)
   updateStatus();
-  setInterval(updateStatus, 15000);
+  setInterval(updateStatus, 5000);
 });
