@@ -271,15 +271,6 @@ h1 {
   .social-icons {
     gap: 0.3rem;
   }
-  
-  .status-username {
-  display: block;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 0.2rem;
-  margin-left: -200px;
-  }
 }
 
 /* Виньетка — только углы */
@@ -373,7 +364,7 @@ body::before {
 
 /* Стиль текста — крупный + свечение */
 .glow-text {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 700;
   color: #ffffff;
   text-shadow:
@@ -383,6 +374,7 @@ body::before {
   margin: 0;
   position: relative;
   z-index: 2;
+  margin-left: -20px;
 }
 
 /* Canvas для частиц внутри текста */
@@ -481,7 +473,14 @@ body::before {
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 0.2rem;
-  margin-left: -240px;
+  margin-left: -240px; /* Сдвигаем влево на десктопе */
+}
+
+/* На мобильных — отменяем сдвиг */
+@media (max-width: 768px) {
+  .status-username {
+    margin-left: -200px; /* Возвращаем в нормальное положение */
+  }
 }
 
 .status-activity {
