@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusIndicator = document.getElementById('status-indicator');
   const activityIcon = document.getElementById('activity-icon');
   const activityText = document.getElementById('activity-text');
-  const verifiedBadge = document.querySelector('.verified-badge'); // Галочка
 
   async function updateStatus() {
     try {
@@ -39,13 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Обновляем текст
       activityText.textContent = activityTextContent;
       activityText.title = activityTextContent;
-	  
-	  // Показываем/скрываем галочку
-      if (activityTextContent === 'нет активности в Discord') {
-        verifiedBadge.style.display = 'none';
-      } else {
-        verifiedBadge.style.display = 'inline-flex';
-      }
 
     } catch (err) {
       console.error('❌ Ошибка загрузки статуса:', err);
