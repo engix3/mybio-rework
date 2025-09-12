@@ -359,7 +359,7 @@ body::before {
   justify-content: center;
   gap: 0.4rem;
   margin-bottom: 1.5rem;
-  width: 100%;
+  width: 105%;
 }
 
 /* Стиль текста — крупный + свечение */
@@ -431,7 +431,7 @@ body::before {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  margin-bottom: 2rem;
+  margin-bottom: -1rem;
   padding: 0.5rem;
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.2);
