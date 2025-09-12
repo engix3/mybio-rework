@@ -271,6 +271,15 @@ h1 {
   .social-icons {
     gap: 0.3rem;
   }
+  
+  .status-username {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.2rem;
+  margin-left: -200px;
+  }
 }
 
 /* Виньетка — только углы */
