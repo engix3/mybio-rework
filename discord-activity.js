@@ -40,13 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
       activityText.textContent = activityTextContent;
       activityText.title = activityTextContent;
 
-      // Показываем/скрываем галочку
-      if (activityTextContent === 'нет активности в Discord') {
-        verifiedBadge.style.display = 'none';
-      } else {
-        verifiedBadge.style.display = 'inline-flex';
-      }
-
     } catch (err) {
       console.error('❌ Ошибка загрузки статуса:', err);
       activityText.textContent = 'ошибка подключения';
