@@ -473,7 +473,7 @@ body::before {
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 0.2rem;
-  margin-left: -240px; /* Сдвигаем влево на десктопе */
+  margin-left: -245px; /* Сдвигаем влево на десктопе */
 }
 
 /* На мобильных — отменяем сдвиг */
