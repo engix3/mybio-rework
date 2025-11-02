@@ -131,7 +131,6 @@ backdrop-filter: blur(3px);
   border-radius: 50%;
   border: 3px solid rgba(255, 255, 255, 0.2); /* Прозрачная граница */
   object-fit: cover;
-  margin-bottom: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -364,7 +363,7 @@ body::before {
 
 /* Стиль текста — крупный + свечение */
 .glow-text {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 700;
   color: #ffffff;
   text-shadow:
