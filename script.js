@@ -269,7 +269,10 @@ function initTypewriter() {
     setTimeout(initTypewriter, typeSpeed);
 }
 
-/* --- 4. DISCORD LANYARD API --- */
+/* --- 4. DISCORD LANYARD API (UPDATED) --- */
+let currentStartTime = null; // Время начала игры
+let currentActivityText = ""; // Название игры (без таймера)
+
 function connectLanyard() {
     const ws = new WebSocket('wss://api.lanyard.rest/socket');
     
@@ -289,157 +292,235 @@ function connectLanyard() {
         }
     };
     
-    // Heartbeat (поддержание соединения)
+    // Heartbeat
     setInterval(() => {
         ws.send(JSON.stringify({ op: 3 }));
     }, 30000);
 }
 
+// Запускаем таймер, который тикает каждую секунду
+setInterval(() => {
+    if (currentStartTime && currentActivityText) {
+        const subTextEl = document.getElementById('discord-sub-text');
+        
+        const elapsed = Date.now() - currentStartTime;
+        if (elapsed > 0) {
+            const seconds = Math.floor(elapsed / 1000);
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60; // Секунды, чтобы видеть движение
+            
+            // Формат времени: 01:45 elapsed
+            const timeStr = h > 0 
+                ? `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` 
+                : `${m}:${s.toString().padStart(2, '0')}`;
+            
+            // Обновляем текст напрямую (без плавности, чтобы не мигало каждую секунду)
+            subTextEl.textContent = `${currentActivityText} • ${timeStr} elapsed`;
+        }
+    }
+}, 1000);
+
+/* --- ФИНАЛЬНАЯ ВЕРСИЯ: STATUS UPDATE (BUG FIX) --- */
 function updateStatus(data) {
     const discordCard = document.getElementById('discord-card');
     
     // Элементы
-    const avatarImg = document.getElementById('discord-avatar');
-    const cardAvatar = document.getElementById('discord-card-avatar');
-    const statusDot = document.getElementById('discord-status-dot');
+    const mainAvatar = document.getElementById('discord-avatar');       // Большая аватарка сверху
+    const cardAvatar = document.getElementById('discord-card-avatar');  // Аватарка в карточке
+    const statusDot = document.getElementById('discord-status-dot');    // Уголок
     const usernameEl = document.getElementById('discord-username');
     const statusTextEl = document.getElementById('discord-status-text');
     const subTextEl = document.getElementById('discord-sub-text');
 
-    // 1. Данные Пользователя (Аватар)
-    if(data.discord_user) {
-        const user = data.discord_user;
-        const avatarId = user.avatar;
-        const userId = user.id;
-        const avatarUrl = avatarId 
-            ? `https://cdn.discordapp.com/avatars/${userId}/${avatarId}.png?size=512` 
-            : `https://cdn.discordapp.com/embed/avatars/0.png`;
+    // --- 1. ОБРАБОТКА ПОЛЬЗОВАТЕЛЯ (Базовая инфа) ---
+    if (!data.discord_user) return;
+    
+    const user = data.discord_user;
+    const userId = user.id;
+    const avatarId = user.avatar;
+    const userAvatarUrl = avatarId 
+        ? `https://cdn.discordapp.com/avatars/${userId}/${avatarId}.png?size=512` 
+        : `https://cdn.discordapp.com/embed/avatars/0.png`;
 
-        // === ОБНОВЛЕНИЕ ЦВЕТА РАМКИ (ГЛАВНОЙ АВАТАРКИ) ===
-        const mainAvatar = document.getElementById('discord-avatar');
-        if(mainAvatar) {
-            // Цвета статусов
-            const statusColors = {
-                online: '#23a559',
-                idle: '#f0b232',
-                dnd: '#f23f43',
-                offline: '#333333' // Темно-серый для оффлайна
-            };
-            
-            // Получаем текущий статус
-            const currentStatus = data.discord_status || 'offline';
-            const statusColor = statusColors[currentStatus];
-
-            // Применяем цвет рамки + эффект свечения
-            mainAvatar.style.borderColor = statusColor;
-            mainAvatar.style.boxShadow = `0 0 30px ${statusColor}40`; // 40 = прозрачность
-        }
-
-        // Обновляем главную аватарку (если еще не стоит)
-        if (avatarImg.src !== avatarUrl) {
-            avatarImg.src = avatarUrl;
-        }
-
-        // Никнейм
-        smoothUpdate(usernameEl, user.global_name || user.username);
-    }
-
-    // 2. Статус (Цвет точки)
-    const colors = {
+    // Определяем цвет статуса
+    const statusMap = {
         online: '#23a559',
         idle: '#f0b232',
         dnd: '#f23f43',
         offline: '#80848e'
     };
     const status = data.discord_status || 'offline';
-    const color = colors[status];
-    statusDot.style.backgroundColor = color;
+    const statusColor = statusMap[status];
 
-    // 3. Активность (Logic)
-    discordCard.classList.remove('hidden'); 
-    let hasActivity = false;
+    // Обновляем главную (верхнюю) аватарку и ник
+    if (mainAvatar) {
+        if (mainAvatar.src !== userAvatarUrl) mainAvatar.src = userAvatarUrl;
+        mainAvatar.style.borderColor = statusColor;
+        mainAvatar.style.boxShadow = `0 0 30px ${statusColor}40`;
+    }
+    smoothUpdate(usernameEl, user.global_name || user.username);
+    discordCard.classList.remove('hidden');
 
-    // A. Spotify
-    if(data.listening_to_spotify) {
-        hasActivity = true;
-        const spotify = data.spotify;
-        
-        // Плавное обновление текста
-        smoothUpdate(statusTextEl, `<span class="text-green-400 font-bold">Listening to Spotify</span>`, true);
-        smoothUpdate(subTextEl, `${spotify.song} - ${spotify.artist}`);
-        
-        // Обложка (без плавности, чтобы не мигала лишний раз)
-        if(spotify.album_art_url && cardAvatar.src !== spotify.album_art_url) {
-          smoothImageUpdate(cardAvatar, spotify.album_art_url, 'rounded-md');
-        }
+    // --- 2. ОПРЕДЕЛЕНИЕ ТЕКУЩЕЙ АКТИВНОСТИ ---
+    // Нам нужно понять: мы в режиме "Media/Game" или в режиме "Default"?
+    
+    let mode = 'default'; // default | spotify | game
+    let activityData = null;
+
+    // Сначала ищем Spotify
+    if (data.listening_to_spotify) {
+        mode = 'spotify';
+        activityData = data.spotify;
     } 
-    // B. Игры / Приложения
+    // Если нет, ищем Игры (type 0)
     else if (data.activities && data.activities.length > 0) {
         const game = data.activities.find(a => a.type === 0);
-        const custom = data.activities.find(a => a.type === 4);
-
         if (game) {
-            hasActivity = true;
-            smoothUpdate(statusTextEl, `Playing <span class="text-white font-bold">${game.name}</span>`, true);
-            smoothUpdate(subTextEl, game.details || game.state || "In Game");
-            
-            // Картинка игры
-            if(game.assets && game.assets.large_image) {
-                let iconUrl = game.assets.large_image;
-                if(iconUrl.startsWith('mp:')) iconUrl = iconUrl.replace('mp:', 'https://media.discordapp.net/');
-                else iconUrl = `https://cdn.discordapp.com/app-assets/${game.application_id}/${iconUrl}.png`;
-                
-                if (cardAvatar.src !== iconUrl) {
-                    smoothImageUpdate(cardAvatar, iconUrl, 'rounded-md');
-                }
-            }
-        } else if (custom) {
-            // Кастомный статус
-            smoothUpdate(statusTextEl, custom.state || "Vibing");
-            smoothUpdate(subTextEl, "");
-            resetCardAvatar(data.discord_user);
-        } else {
-            // Просто статус
-            smoothUpdate(statusTextEl, "Status: " + status.charAt(0).toUpperCase() + status.slice(1));
-            smoothUpdate(subTextEl, "Just Chilling");
-            resetCardAvatar(data.discord_user);
+            mode = 'game';
+            activityData = game;
         }
-    } 
-    // C. Оффлайн / Без активности
-    else {
-        smoothUpdate(statusTextEl, "Status: " + status.charAt(0).toUpperCase() + status.slice(1));
-        smoothUpdate(subTextEl, status === 'offline' ? "Currently Offline" : "Just Chilling");
-        resetCardAvatar(data.discord_user);
     }
 
-    // Точка статуса
-    statusDot.style.display = hasActivity ? 'none' : 'block';
-}
+    // Сброс глобальных таймеров перед новой отрисовкой
+    currentStartTime = null;
+    currentActivityText = "";
 
-function resetCardAvatar(user) {
-    const cardAvatar = document.getElementById('discord-card-avatar');
-    if(!user) return;
-    const avatarId = user.avatar;
-    const userId = user.id;
-    const avatarUrl = avatarId 
-        ? `https://cdn.discordapp.com/avatars/${userId}/${avatarId}.png?size=512` 
-        : `https://cdn.discordapp.com/embed/avatars/0.png`;
+    // --- 3. ОТРИСОВКА В ЗАВИСИМОСТИ ОТ РЕЖИМА ---
+
+    if (mode === 'spotify') {
+        // === РЕЖИМ SPOTIFY ===
+        smoothUpdate(statusTextEl, `<span class="text-green-400 font-bold">Listening to Spotify</span>`, true);
+        smoothUpdate(subTextEl, `${activityData.song} - ${activityData.artist}`);
+        
+        // Картинка альбома
+        if (activityData.album_art_url) {
+            smoothImageUpdate(cardAvatar, activityData.album_art_url, 'rounded-md');
+        }
+        
+        // В Spotify скрываем точку (или можно поставить лого, но лучше скрыть)
+        statusDot.style.display = 'none';
+    } 
     
-    // Используем плавную смену
-    smoothImageUpdate(cardAvatar, avatarUrl, 'rounded-full');
+    else if (mode === 'game') {
+        // === РЕЖИМ ИГРЫ ===
+        const game = activityData;
+        smoothUpdate(statusTextEl, `Playing <span class="text-white font-bold">${game.name}</span>`, true);
+
+        // Таймер
+        currentActivityText = game.details || game.state || "In Game";
+        if (game.timestamps && game.timestamps.start) {
+            currentStartTime = game.timestamps.start;
+            subTextEl.textContent = `${currentActivityText} • 0:00 elapsed`;
+        } else {
+            smoothUpdate(subTextEl, currentActivityText);
+        }
+
+        // Большая картинка (Large Image)
+        let largeImgUrl = userAvatarUrl; // Фолбэк на аватарку
+        if (game.assets && game.assets.large_image) {
+            let icon = game.assets.large_image;
+            if (icon.startsWith('mp:')) icon = icon.replace('mp:', 'https://media.discordapp.net/');
+            else icon = `https://cdn.discordapp.com/app-assets/${game.application_id}/${icon}.png`;
+            largeImgUrl = icon;
+        }
+        smoothImageUpdate(cardAvatar, largeImgUrl, 'rounded-md');
+
+        // Маленькая картинка (Small Image) -> В УГОЛ
+        if (game.assets && game.assets.small_image) {
+            let smIcon = game.assets.small_image;
+            if (smIcon.startsWith('mp:')) smIcon = smIcon.replace('mp:', 'https://media.discordapp.net/');
+            else smIcon = `https://cdn.discordapp.com/app-assets/${game.application_id}/${smIcon}.png`;
+            
+            // Рисуем Small Image
+            statusDot.style.display = 'block';
+            statusDot.style.width = '18px';
+            statusDot.style.height = '18px';
+            statusDot.style.border = 'none';
+            statusDot.style.backgroundColor = '#000'; // Подложка
+            statusDot.style.borderRadius = '50%';
+            statusDot.innerHTML = `<img src="${smIcon}" class="w-full h-full rounded-full object-cover">`;
+            // Позиция
+            statusDot.style.bottom = '-4px';
+            statusDot.style.right = '-4px';
+        } else {
+            // Если игры нет маленькой картинки -> Скрываем точку
+            statusDot.style.display = 'none';
+        }
+    } 
+    
+    else {
+        // === РЕЖИМ ОБЫЧНЫЙ (DEFAULT) ===
+        // Возвращаем аватарку пользователя
+        // Важно: проверяем, не стоит ли она уже, чтобы не мигало
+        if (!cardAvatar.src.includes(avatarId) && !cardAvatar.src.includes("embed/avatars")) {
+             smoothImageUpdate(cardAvatar, userAvatarUrl, 'rounded-full');
+        } else {
+             // Если форма была квадратной (после игры), возвращаем круг
+             cardAvatar.classList.remove('rounded-md');
+             cardAvatar.classList.add('rounded-full');
+        }
+
+        // Текст статуса
+        // Проверяем кастомный статус (type 4)
+        const custom = data.activities ? data.activities.find(a => a.type === 4) : null;
+        if (custom) {
+            smoothUpdate(statusTextEl, custom.state || "Vibing");
+            smoothUpdate(subTextEl, "");
+        } else {
+            smoothUpdate(statusTextEl, "Status: " + status.charAt(0).toUpperCase() + status.slice(1));
+            smoothUpdate(subTextEl, status === 'offline' ? "Currently Offline" : "Just Chilling");
+        }
+
+        // --- ЛОГИКА ТОЧКИ / ТЕЛЕФОНА ---
+        statusDot.style.display = 'flex'; // Flex нужен для центрирования иконки телефона
+        statusDot.innerHTML = ''; // Чистим картинки
+        
+        // Сброс стилей (обязательно, чтобы не осталось от Small Image)
+        statusDot.style.borderRadius = '50%';
+        statusDot.style.border = 'none';
+        statusDot.style.backgroundColor = 'transparent';
+
+        if (data.active_on_discord_mobile && !data.active_on_discord_desktop) {
+            // ТЕЛЕФОН
+            statusDot.innerHTML = '<i class="fa-solid fa-mobile-screen"></i>';
+            statusDot.style.color = statusColor;
+            statusDot.style.fontSize = '12px';
+            statusDot.style.width = 'auto';
+            statusDot.style.height = 'auto';
+            statusDot.style.bottom = '0px';
+            statusDot.style.right = '-4px';
+        } else {
+            // ПК (ТОЧКА)
+            statusDot.style.width = '14px';
+            statusDot.style.height = '14px';
+            statusDot.style.backgroundColor = statusColor;
+            statusDot.style.border = '3px solid #111'; // Возвращаем рамку
+            statusDot.style.bottom = '-2px';
+            statusDot.style.right = '-2px';
+        }
+    }
 }
 
-/* --- 5. IP & ГЕОДАННЫЕ --- */
+/* --- 5. IP & ГЕОДАННЫЕ (Исправлено для РФ) --- */
 function fetchGeoData() {
-    fetch('https://ipapi.co/json/')
+    // Используем ipwho.is вместо ipapi.co
+    fetch('https://ipwho.is/')
         .then(res => res.json())
         .then(data => {
+            // Проверка на успешный ответ API
+            if (!data.success) {
+                throw new Error("API Limit or Error");
+            }
+
             document.getElementById('user-ip').textContent = data.ip;
-            document.getElementById('user-city').textContent = `${data.city}, ${data.country_code}`;
+            document.getElementById('user-city').textContent = `${data.region}, ${data.country_code}`;
         })
-        .catch(() => {
-            document.getElementById('user-ip').textContent = "HIDDEN";
-            document.getElementById('user-city').textContent = "N/A";
+        .catch((e) => {
+            console.warn("GeoIP Error:", e);
+            // Заглушка, если API не сработал
+            document.getElementById('user-ip').textContent = "127.0.0.1";
+            document.getElementById('user-city').textContent = "Unknown System";
         });
 }
 
@@ -676,6 +757,54 @@ function smoothImageUpdate(imgElement, newSrc, newShapeClass = null) {
 
     }, 300); // Время исчезновения
 }
+
+/* --- 10. КАСТОМНЫЙ КУРСОР-ТУЛТИП ДЛЯ ССЫЛОК --- */
+const cursorTooltip = document.getElementById('link-cursor-tooltip');
+const tooltipText = document.getElementById('tooltip-text');
+const allLinks = document.querySelectorAll('a');
+
+// Функция обновления позиции
+document.addEventListener('mousemove', (e) => {
+    // Сдвигаем тултип чуть правее и ниже курсора (чтобы не перекрывал)
+    const x = e.clientX + 15; 
+    const y = e.clientY + 15;
+    
+    // Проверка краев экрана, чтобы не улетал
+    cursorTooltip.style.left = `${Math.min(x, window.innerWidth - 200)}px`;
+    cursorTooltip.style.top = `${Math.min(y, window.innerHeight - 50)}px`;
+});
+
+allLinks.forEach(link => {
+    link.addEventListener('mouseenter', () => {
+        // Получаем ссылку
+        let url = link.href;
+        
+        // Очищаем ссылку от мусора (https://, www.) для красоты
+        try {
+            const urlObj = new URL(url);
+            // Если это ссылка на этот же сайт (якорь #), пишем SYSTEM
+            if (url.includes(window.location.hostname)) {
+                 tooltipText.textContent = "SYSTEM ACTION";
+            } else {
+                 // Показываем домен + путь (обрезаем если длинный)
+                 let displayUrl = urlObj.hostname + urlObj.pathname;
+                 displayUrl = displayUrl.replace('www.', '');
+                 if(displayUrl.length > 25) displayUrl = displayUrl.substring(0, 25) + '...';
+                 tooltipText.textContent = ">> " + displayUrl;
+            }
+        } catch (e) {
+            tooltipText.textContent = "LINK";
+        }
+
+        // Показываем
+        cursorTooltip.style.opacity = '1';
+    });
+
+    link.addEventListener('mouseleave', () => {
+        // Скрываем
+        cursorTooltip.style.opacity = '0';
+    });
+});
 
 console.log("%cSTOP!", "color: red; font-size: 50px; font-weight: bold; text-shadow: 2px 2px 0px black;");
 console.log("%cThis is a browser feature intended for developers.", "color: white; font-size: 16px;");
