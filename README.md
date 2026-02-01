@@ -73,8 +73,8 @@
 
 <div align="center">
 
-**Created by [engix3](https://github.com/engix3),**  
-**Developer - [Gemini 3 Pro](https://gemini.google.com),**  
+**Created by [engix3](https://github.com/engix3)**  
+**Developer - [Gemini 3 Pro](https://gemini.google.com)**  
 *System Status: ALL SYSTEMS OPERATIONAL* 🟢
 
 </div>
