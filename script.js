@@ -13,14 +13,19 @@ const videoBg = document.getElementById('video-bg');
 /* --- 1. ВХОД В СИСТЕМУ --- */
 let entered = false;
 
-// Сразу запускаем соединение, не ждем клика
+// Переменные для калибровки гироскопа
+let initialBeta = null;
+let initialGamma = null;
+let tiltRAF = null; // Для requestAnimationFrame
+
+// Сразу запускаем соединение
 connectLanyard();
 
 overlay.addEventListener('click', () => {
     if (entered) return;
     entered = true;
 
-    // Воспроизведение звука доступа
+    // Воспроизведение звука
     enterSound.volume = 0.4;
     enterSound.play().catch(e => console.log("Audio prevented"));
 
@@ -28,13 +33,13 @@ overlay.addEventListener('click', () => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (isMobile) {
-        // Если телефон: Убиваем библиотеку vanilla-tilt (мышь)
+        // 1. Убиваем vanilla-tilt (мышь), чтобы не конфликтовал
         const card = document.querySelector('.glass-card');
-        if (card.vanillaTilt) {
+        if (card && card.vanillaTilt) {
             card.vanillaTilt.destroy();
         }
 
-        // Запрашиваем доступ к гироскопу (для iOS 13+)
+        // 2. Запрашиваем доступ к гироскопу (iOS 13+)
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
             DeviceOrientationEvent.requestPermission()
                 .then(response => {
@@ -44,7 +49,7 @@ overlay.addEventListener('click', () => {
                 })
                 .catch(console.error);
         } else {
-            // Для Android и старых iOS
+            // Android и старые iOS
             window.addEventListener('deviceorientation', handleTilt);
         }
     }
@@ -57,17 +62,14 @@ overlay.addEventListener('click', () => {
         techStats.classList.remove('hidden');
         footerInfo.classList.remove('hidden');
         
-        // Запуск музыки
-    // Синхронизируем громкость с ползунком (по умолчанию 15%)
-    // 15% от ползунка * 0.4 (лимит) = 0.06 реальной громкости
-    const volSlider = document.getElementById('volume-slider');
-    const maxVolumeLimit = 0.4;
-    bgMusic.volume = (volSlider.value / 100) * maxVolumeLimit;
+        // Музыка
+        const volSlider = document.getElementById('volume-slider');
+        const maxVolumeLimit = 0.4;
+        bgMusic.volume = (volSlider.value / 100) * maxVolumeLimit;
         bgMusic.play();
         
         playBtn.innerHTML = '<i class="fa-solid fa-pause text-sm ml-px"></i>';
         
-        // Инициализация остальных функций
         initTypewriter();
         fetchGeoData();
         setGreeting();
@@ -75,25 +77,47 @@ overlay.addEventListener('click', () => {
     }, 800);
 });
 
-// Функция наклона по гироскопу (только для телефонов)
+// Исправленная функция наклона (с калибровкой и сглаживанием)
 function handleTilt(e) {
-    const card = document.querySelector('.glass-card');
-    if (!card) return;
+    if (!entered) return; // Не работаем пока не вошли
 
-    let x = e.gamma; // Наклон влево/вправо [-90,90]
-    let y = e.beta;  // Наклон вперед/назад [-180,180]
+    // Если данные пустые (иногда бывает на Android при старте)
+    if (e.beta === null || e.gamma === null) return;
 
-    // Корректировка значений (убираем перевороты)
-    if (x > 90) x = 90;
-    if (x < -90) x = -90;
-    
-    // Ограничение угла (clamp), чтобы карточка не крутилась слишком сильно
-    // Максимум 15 градусов наклона
-    const tiltX = Math.max(-15, Math.min(15, x));
-    const tiltY = Math.max(-15, Math.min(15, y));
+    // Калибровка: запоминаем начальное положение при первом срабатывании
+    if (initialBeta === null) {
+        initialBeta = e.beta;
+        initialGamma = e.gamma;
+        return;
+    }
 
-    // Применяем трансформацию. Invert X для естественности.
-    card.style.transform = `perspective(1000px) rotateY(${tiltX}deg) rotateX(${-tiltY}deg)`;
+    // Используем requestAnimationFrame для плавности
+    if (tiltRAF) cancelAnimationFrame(tiltRAF);
+
+    tiltRAF = requestAnimationFrame(() => {
+        const card = document.querySelector('.glass-card');
+        if (!card) return;
+
+        // Вычисляем разницу (дельта) между текущим положением и начальным
+        let tiltX = e.gamma - initialGamma; // Наклон влево/вправо
+        let tiltY = e.beta - initialBeta;   // Наклон вперед/назад
+
+        // Ограничиваем углы (Clamp), чтобы не крутилось бешено
+        // Max 20 градусов в любую сторону
+        const maxTilt = 20; 
+        
+        if (tiltX > maxTilt) tiltX = maxTilt;
+        if (tiltX < -maxTilt) tiltX = -maxTilt;
+        
+        if (tiltY > maxTilt) tiltY = maxTilt;
+        if (tiltY < -maxTilt) tiltY = -maxTilt;
+
+        // Применяем. 
+        // rotateY вращает вокруг вертикальной оси (от движения влево-вправо)
+        // rotateX вращает вокруг горизонтальной оси (от движения вперед-назад)
+        // Меняем знаки, чтобы движение было естественным
+        card.style.transform = `perspective(1000px) rotateY(${tiltX}deg) rotateX(${-tiltY}deg)`;
+    });
 }
 
 /* --- 2. АУДИО ПЛЕЕР (MINIMAL DESIGN) --- */

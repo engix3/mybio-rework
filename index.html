@@ -123,7 +123,7 @@
                 </div>
             </div>
 
-            <!-- === НОВЫЙ АУДИО ПЛЕЕР === -->
+<!-- === АУДИО ПЛЕЕР (Исправленный для телефонов) === -->
             <div class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-300 hover:bg-white/5 transition duration-300">
                 
                 <!-- Кнопка Play -->
@@ -132,14 +132,13 @@
                 </button>
 
                 <!-- Инфо и Слайдер -->
-                <div class="w-full flex flex-col justify-center gap-1">
+                <div class="flex-1 min-w-0 flex flex-col justify-center gap-1">
                     <div class="flex justify-between items-center text-xs px-0.5">
-                      <a href="https://soundcloud.com/stovyyyyy/e2e786a3-3c25-44cb-961b-8e96edaf95fa?si=b571e4240ae547ecba864e0e47ff86e3&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing" target="_blank" class="flex items-center gap-1.5 font-bold text-white truncate max-w-[150px] hover:text-orange-400 transition group/track relative z-30">
+                      <a href="https://soundcloud.com/stovyyyyy/e2e786a3-3c25-44cb-961b-8e96edaf95fa?si=b571e4240ae547ecba864e0e47ff86e3&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing" target="_blank" class="flex items-center gap-1.5 font-bold text-white truncate max-w-full hover:text-orange-400 transition group/track relative z-30">
                         <span class="truncate">MineCRaFT SpiDeRs w/ ocelot //[ o,---,o ]\\ ♨️ @prod me</span>
-                        <!-- Иконка SoundCloud -->
-                        <i class="fa-brands fa-soundcloud text-xs text-orange-500 group-hover/track:text-white transition"></i>
+                        <i class="fa-brands fa-soundcloud text-xs text-orange-500 group-hover/track:text-white transition shrink-0"></i>
                       </a>
-                        <span class="text-[9px] text-neutral-500 mono-font" id="current-time">0:00</span>
+                        <span class="text-[9px] text-neutral-500 mono-font shrink-0 ml-2" id="current-time">0:00</span>
                     </div>
 
                     <!-- Полоса прокрутки -->
@@ -152,31 +151,30 @@
                     </div>
                 </div>
 
-                <!-- Громкость (FIXED) -->
+                <!-- Громкость -->
                 <div class="shrink-0 relative group/vol flex items-center justify-center h-full">
                     <div class="cursor-pointer p-2 -mr-2">
                         <i class="fa-solid fa-volume-high text-neutral-400 text-xs group-hover/vol:text-white transition"></i>
                     </div>
                     
-                    <!-- Слайдер с задержкой исчезновения -->
                     <div class="volume-popup absolute bottom-6 left-1/2 -translate-x-1/2 w-8 h-28 bg-transparent flex flex-col items-center justify-end z-50">
                         <div class="w-8 h-24 bg-[#111] border border-white/10 rounded-lg flex items-end justify-center pb-3 shadow-xl relative overflow-hidden">
                              <div class="absolute w-1 h-16 bg-neutral-700 rounded-full bottom-3"></div>
                              <input type="range" id="volume-slider" class="relative z-10 w-1 h-16 appearance-none bg-transparent outline-none cursor-pointer" orient="vertical" value="15" max="100" style="-webkit-appearance: slider-vertical;">
                         </div>
-                        <div class="w-full h-2 bg-transparent"></div> <!-- Мостик -->
+                        <div class="w-full h-2 bg-transparent"></div>
                     </div>
                 </div>
 
             </div> <!-- Конец плеера -->
 
-            <!-- Социальные Сети -->
+            <!-- Социальные Сети (ТЕПЕРЬ ВНУТРИ) -->
             <div class="flex flex-wrap justify-center gap-3 mb-2 fade-in-stagger delay-400 max-w-[95%]">
                 <a href="https://discord.com/users/1257675618175422576" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                     <i class="fa-brands fa-discord text-lg"></i>
                     <span class="tooltip absolute -top-8 left-1/2 bg-black/80 text-white text-[10px] px-2 py-1 rounded border border-white/10 whitespace-nowrap">Discord</span>
                 </a>
-				<a href="https://github.com/engix3" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                <a href="https://github.com/engix3" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                     <i class="fa-brands fa-github text-lg"></i>
                     <span class="tooltip absolute -top-8 left-1/2 bg-black/80 text-white text-[10px] px-2 py-1 rounded border border-white/10 whitespace-nowrap">GitHub</span>
                 </a>
@@ -206,8 +204,8 @@
                 </a>
             </div>
 
-        </div>
-    </div>
+        </div> <!-- ЭТОТ DIV ЗАКРЫВАЕТ КАРТОЧКУ (Важно, чтобы соцсети были ДО него) -->
+    </div> <!-- ЭТОТ DIV ЗАКРЫВАЕТ КОНТЕЙНЕР -->
 
     <!-- Блок GEO/IP -->
     <div id="footer-info" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-xs text-center hidden fade-in-stagger delay-400">
