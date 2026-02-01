@@ -6,30 +6,21 @@
     <title>engi // system</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
     
-    <!-- Tailwind CSS (Стилизация) -->
+    <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    
-    <!-- FontAwesome (Иконки) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    
-    <!-- iziToast CSS (Уведомления) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
-    
-    <!-- Google Fonts (Шрифты) -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Quicksand:wght@300;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- Подключение стилей -->
     <link rel="stylesheet" href="style.css">
     
     <style>
-        /* Фикс для задержки исчезновения громкости */
+        /* Popup Громкости */
         .volume-popup {
             transition: opacity 0.2s, visibility 0.2s;
-            transition-delay: 0.3s; /* Задержка исчезновения */
+            transition-delay: 0.3s;
             visibility: hidden;
             opacity: 0;
         }
-        /* Когда наводим на группу - показываем сразу */
         .group\/vol:hover .volume-popup {
             visibility: visible;
             opacity: 1;
@@ -39,16 +30,15 @@
 </head>
 <body class="text-white min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden relative">
 
-    <!-- --- АУДИО И ВИДЕО РЕСУРСЫ --- -->
+    <!-- Audio Resources -->
     <audio id="bg-music" loop>
-        <!-- Убедитесь, что путь правильный -->
         <source src="music/MineCRaFT SpiDeRs.mp3" type="audio/mp3">
     </audio>
     <audio id="enter-sound">
         <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mp3">
     </audio>
 
-    <!-- Оверлей Входа (Биометрия) -->
+    <!-- Overlay -->
     <div id="overlay">
         <div class="relative w-full h-full flex flex-col items-center justify-center">
             <div class="scanline"></div>
@@ -61,55 +51,56 @@
         </div>
     </div>
 
-    <!-- Фоновые Эффекты -->
+    <!-- Background -->
     <div id="noise"></div>
     <div id="vignette"></div>
     <video id="video-bg" autoplay loop muted playsinline>
         <source src="video/red-anime-eye-moewalls-com.mp4" type="video/mp4">
     </video>
 
-    <!-- Техническая Статистика -->
+    <!-- Tech Stats -->
     <div id="tech-stats" class="fixed top-4 right-4 z-50 text-right mono-font text-[10px] text-green-500 opacity-80 pointer-events-none hidden">
         <div>FPS: <span id="fps-counter">60</span></div>
         <div>PING: <span id="ping-counter">14</span>ms</div>
         <div id="platform-display">PLATFORM: <span class="text-green-500">...</span></div>
+        <div class="h-px bg-white/20 w-full my-1"></div>
+        <div class="mt-1 text-green/50">HIDE MENU: <span class="text-green">INSERT</span></div>
     </div>
 
-    <!-- Основной Контейнер Карточки -->
+    <!-- Main Card -->
     <div id="main-container" class="relative z-10 w-full max-w-md p-4 hidden flex-grow flex items-center justify-center">
         <div class="glass-card rounded-2xl p-8 flex flex-col items-center text-center relative overflow-hidden w-full" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
             
-            <!-- === ЭФФЕКТ СВЕТА (SPOTLIGHT) === -->
-            <!-- Этот div будет создавать блик под курсором -->
+            <!-- Spotlight Layer -->
             <div id="main-spotlight" class="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0" 
                 style="background: radial-gradient(800px circle at var(--x) var(--y), rgba(255,255,255,0.07), transparent 40%);">
             </div>
 
-            <!-- Аватарка Профиля (Увеличенная + Рамка) -->
+            <!-- Avatar -->
             <div class="relative mb-6 fade-in-stagger z-10">
                <img id="discord-avatar" 
-                 src="..." 
+                 src="" 
                  alt="Profile" 
-                 class="relative w-32 h-32 rounded-full border-4 border-[#333] object-cover shadow-2xl transition-all duration-500">
+                 class="relative w-32 h-32 rounded-full border-4 border-[#333] object-cover shadow-2xl transition-all duration-500 opacity-0">
             </div>
 
-            <!-- Никнейм с RGB Неоном -->
+            <!-- Nickname -->
             <h1 class="text-6xl font-black mb-2 tracking-tighter drop-shadow-2xl fade-in-stagger delay-100">
                 <span class="neon-pulse font-[Quicksand]">engi</span>
             </h1>
             
-            <!-- Печатная машинка -->
+            <!-- Typewriter -->
             <div class="h-6 mb-1 flex items-center justify-center space-x-1 fade-in-stagger delay-100">
                 <span class="text-neutral-400 font-medium text-sm mono-font" id="typewriter"></span><span class="cursor h-4"></span>
             </div>
             
-            <!-- Приветствие -->
+            <!-- Greeting -->
             <div id="time-greeting" class="text-[10px] text-neutral-500 mb-6 mono-font fade-in-stagger delay-100"></div>
 
-            <!-- Карточка Discord -->
+            <!-- Discord Status -->
             <div id="discord-card" class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-200 hover:bg-[#151515] transition cursor-pointer group shadow-lg hidden">
                 <div class="relative shrink-0">
-                    <img id="discord-card-avatar" src="https://cdn.discordapp.com/avatars/1257675618175422576/91d94bbf478d84c66d8739fc69dac3c1.png?size=512" class="w-10 h-10 rounded-full object-cover bg-neutral-800 smooth-all" alt="">
+                    <img id="discord-card-avatar" src="" class="w-10 h-10 rounded-full object-cover bg-neutral-800 smooth-all" alt="">
                     <div id="discord-status-dot" class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] bg-gray-500 smooth-all"></div>
                 </div>
                 
@@ -123,62 +114,52 @@
                 </div>
             </div>
 
-<!-- === АУДИО ПЛЕЕР (Исправленный для телефонов) === -->
+            <!-- Audio Player -->
             <div class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-300 hover:bg-white/5 transition duration-300">
                 
-                <!-- Кнопка Play -->
                 <button id="play-btn" class="shrink-0 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition shadow-lg shadow-white/10">
                     <i class="fa-solid fa-play text-sm ml-0.5"></i>
                 </button>
 
-<!-- Инфо и Слайдер -->
-<div class="flex-1 min-w-0 flex flex-col justify-center gap-1">
-    
-    <!-- Текстовая информация (Разделена на 2 строки) -->
-    <div class="flex flex-col justify-end px-0.5 min-h-[26px]">
-        <!-- 1. Название трека + Иконка SC -->
-        <a href="https://soundcloud.com/stovyyyyy/e2e786a3-3c25-44cb-961b-8e96edaf95fa" target="_blank" class="flex items-center gap-1.5 font-bold text-white text-xs hover:text-orange-400 transition group/track w-fit max-w-full">
-            <span class="truncate">MineCRaFT SpiDeRs w/ ocelot //[ o,---,o ]\\ ♨️ @prod me</span> 
-            <i class="fa-brands fa-soundcloud text-[10px] text-orange-500 transition shrink-0"></i>
-        </a>
-        
-        <!-- 2. Исполнитель (Серый текст) -->
-        <span class="text-[10px] text-neutral-400 truncate font-medium -mt-0.5">Stovyy, ocelot</span>
-    </div>
+                <div class="flex-1 min-w-0 flex flex-col justify-center gap-1">
+                    <div class="flex flex-col justify-end px-0.5 min-h-[26px]">
+                        <a href="https://soundcloud.com/stovyyyyy/e2e786a3-3c25-44cb-961b-8e96edaf95fa" target="_blank" class="flex items-center gap-1.5 font-bold text-white text-xs hover:text-orange-400 transition group/track w-fit max-w-full">
+                            <span class="truncate">MineCRaFT SpiDeRs w/ ocelot //[ o,---,o ]\\ ♨️ @prod me</span> 
+                            <i class="fa-brands fa-soundcloud text-[10px] text-orange-500 transition shrink-0"></i>
+                        </a>
+                        <span class="text-[10px] text-neutral-400 truncate font-medium -mt-0.5">Stovyy, ocelot</span>
+                    </div>
 
-    <!-- Полоса прокрутки -->
-    <div class="flex items-center gap-2 mt-0.5">
-        <div class="relative w-full h-1 flex items-center group/seek">
-            <input type="range" id="seek-slider" class="absolute inset-0 z-20 w-full h-4 -top-1.5 opacity-0 cursor-pointer margin-0" value="0" max="100">
-            <div class="relative w-full h-1 bg-white/10 rounded-full z-10 pointer-events-none overflow-hidden">
-                <div id="seek-fill" class="absolute top-0 left-0 h-full bg-white rounded-full transition-none"></div>
-            </div>
-            <!-- Кружок (thumb) -->
-            <div id="seek-thumb" class="absolute h-2.5 w-2.5 bg-white rounded-full shadow shadow-black/50 opacity-0 group-hover/seek:opacity-100 transition-opacity duration-200 pointer-events-none z-10 top-1/2 -translate-y-1/2" style="left: 0%;"></div>
-        </div>
-        <!-- Время справа от полоски -->
-        <span class="text-[9px] text-neutral-500 mono-font shrink-0 w-6 text-right" id="current-time">0:00</span>
-    </div>
-</div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <div class="relative w-full h-1 flex items-center group/seek">
+                            <input type="range" id="seek-slider" class="absolute inset-0 z-20 w-full h-4 -top-1.5 opacity-0 cursor-pointer margin-0" value="0" max="100">
+                            <div class="relative w-full h-1 bg-white/10 rounded-full z-10 pointer-events-none overflow-hidden">
+                                <div id="seek-fill" class="absolute top-0 left-0 h-full bg-white rounded-full transition-none"></div>
+                            </div>
+                            <div id="seek-thumb" class="absolute h-2.5 w-2.5 bg-white rounded-full shadow shadow-black/50 opacity-0 group-hover/seek:opacity-100 transition-opacity duration-200 pointer-events-none z-10 top-1/2 -translate-y-1/2" style="left: 0%;"></div>
+                        </div>
+                        <span class="text-[9px] text-neutral-500 mono-font shrink-0 w-6 text-right" id="current-time">0:00</span>
+                    </div>
+                </div>
 
-                <!-- Громкость -->
                 <div class="shrink-0 relative group/vol flex items-center justify-center h-full">
                     <div class="cursor-pointer p-2 -mr-2">
                         <i class="fa-solid fa-volume-high text-neutral-400 text-xs group-hover/vol:text-white transition"></i>
                     </div>
                     
                     <div class="volume-popup absolute bottom-6 left-1/2 -translate-x-1/2 w-8 h-28 bg-transparent flex flex-col items-center justify-end z-50">
-                        <div class="w-8 h-24 bg-[#111] border border-white/10 rounded-lg flex items-end justify-center pb-3 shadow-xl relative overflow-hidden">
-                             <div class="absolute w-1 h-16 bg-neutral-700 rounded-full bottom-3"></div>
-                             <input type="range" id="volume-slider" class="relative z-10 w-1 h-16 appearance-none bg-transparent outline-none cursor-pointer" orient="vertical" value="15" max="100" style="-webkit-appearance: slider-vertical;">
+                        <div class="w-8 h-24 bg-[#111] border border-white/10 rounded-lg flex items-end justify-center pb-3 shadow-xl relative overflow-visible">
+                            <!-- Тултип удален -->
+                            <div class="absolute w-1 h-16 bg-neutral-700 rounded-full bottom-3 pointer-events-none"></div>
+                            <input type="range" id="volume-slider" class="relative z-10 w-1 h-16 appearance-none bg-transparent outline-none cursor-pointer" orient="vertical" value="15" max="100" style="-webkit-appearance: slider-vertical;">
                         </div>
                         <div class="w-full h-2 bg-transparent"></div>
                     </div>
                 </div>
 
-            </div> <!-- Конец плеера -->
+            </div>
 
-            <!-- Социальные Сети (ТЕПЕРЬ ВНУТРИ) -->
+            <!-- Socials -->
             <div class="flex flex-wrap justify-center gap-3 mb-2 fade-in-stagger delay-400 max-w-[95%]">
                 <a href="https://discord.com/users/1257675618175422576" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                     <i class="fa-brands fa-discord text-lg"></i>
@@ -206,10 +187,10 @@
                 </a>
             </div>
 
-        </div> <!-- ЭТОТ DIV ЗАКРЫВАЕТ КАРТОЧКУ (Важно, чтобы соцсети были ДО него) -->
-    </div> <!-- ЭТОТ DIV ЗАКРЫВАЕТ КОНТЕЙНЕР -->
+        </div>
+    </div>
 
-    <!-- Блок GEO/IP -->
+    <!-- GEO/IP -->
     <div id="footer-info" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-xs text-center hidden fade-in-stagger delay-400">
         <div class="rounded-lg p-2 bg-black/20 backdrop-blur-md blur-reveal relative group cursor-crosshair">
             <div class="absolute inset-0 flex items-center justify-center text-[10px] text-green-500 font-bold opacity-100 group-hover:opacity-0 transition duration-300 uppercase tracking-widest">
@@ -222,27 +203,33 @@
         </div>
     </div>
 
-    <!-- Кастомное Контекстное Меню -->
+    <!-- Context Menu -->
     <div id="custom-context-menu" class="fixed hidden z-[99999] min-w-[150px] glass-menu rounded-lg overflow-hidden border border-white/10 p-1 flex-col gap-1">
-        <button class="menu-item" onclick="copyCurrentUrl()">
-            <i class="fa-solid fa-link text-xs w-5 text-center"></i> Copy Link
+        <button class="menu-item" onclick="handleCopyAction()">
+            <i class="fa-solid fa-link text-xs w-5 text-center"></i> 
+            <span id="context-copy-text">Copy Link</span>
         </button>
         <button class="menu-item" onclick="window.open('https://github.com/engix3/mybio-rework', '_blank')">
             <i class="fa-brands fa-github text-xs w-5 text-center"></i> Source Code
         </button>
         <div class="h-[1px] bg-white/10 w-full my-0.5"></div>
-        <button class="menu-item text-red-400 hover:text-red-300" onclick="location.reload()">
+        <button class="menu-item text-red-400 hover:text-red-300" onclick="triggerReboot()">
             <i class="fa-solid fa-rotate-right text-xs w-5 text-center"></i> Restart System
         </button>
     </div>
 
-<!-- Кастомный Тултип Ссылок -->
-<div id="link-cursor-tooltip" class="fixed pointer-events-none opacity-0 z-[99999] px-3 py-1.5 rounded-md border border-white/10 bg-black/80 backdrop-blur-md shadow-2xl transition-opacity duration-200 flex items-center gap-2">
-    <i class="fa-solid fa-link text-[10px] text-green-400"></i>
-    <span id="tooltip-text" class="text-[10px] mono-font text-green-400 font-bold tracking-wider uppercase">LINK</span>
-</div>
+    <!-- Cursor Tooltip -->
+    <div id="link-cursor-tooltip" class="fixed pointer-events-none opacity-0 z-[99999] px-3 py-1.5 rounded-md border border-white/10 bg-black/80 backdrop-blur-md shadow-2xl transition-opacity duration-200 flex items-center gap-2">
+        <i class="fa-solid fa-link text-[10px] text-green-400"></i>
+        <span id="tooltip-text" class="text-[10px] mono-font text-green-400 font-bold tracking-wider uppercase">LINK</span>
+    </div>
 
-    <!-- Подключение Скриптов -->
+    <!-- Reboot Screen -->
+    <div id="reboot-screen" class="fixed inset-0 bg-black z-[100000] hidden flex-col items-start justify-start p-6 md:p-10 mono-font text-green-500 text-xs md:text-sm select-none overflow-hidden">
+        <div id="reboot-logs" class="flex flex-col gap-1 w-full max-w-2xl"></div>
+        <div class="mt-1 animate-pulse text-green-400">_</div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
     <script src="script.js"></script>
