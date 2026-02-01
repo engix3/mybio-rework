@@ -1,506 +1,286 @@
-/* === АНИМАЦИЯ ПРИ ЗАГРУЗКЕ (оставляем как есть) === */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.avatar,
-h1,
-.bio,
-.discord-status,
-.social-icons,
-.theme-toggle {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeIn 0.5s ease-out forwards;
-  animation-delay: 0.2s;
-}
-
-/* === УДАЛЯЕМ ТЕМЫ → ФИКСИРУЕМ ТЁМНЫЙ СТИЛЬ === */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Убираем ВСЕ отступы у body и html */
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden; /* Запрещаем скролл */
+:root {
+    --primary-rgb: 255, 255, 255;
+    --accent-glow: 0, 255, 255;
 }
 
 body {
-  display: flex;
-  font-family: 'Inter', sans-serif;
-  background: #000;
-  color: #fff;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  /* УБРАЛИ padding: 1rem; ← это было причиной! */
-  position: relative;
+    font-family: 'Outfit', sans-serif;
+    background-color: #000;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-.content-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100vh; /* ← Было min-height, теперь просто height */
-  position: relative;
-  z-index: 10;
-  margin: 0;
-  padding: 0;
+/* --- Эффект Шума (Grain) --- */
+#noise {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-/* Видео — теперь на z-index: -2 */
-.video-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: -2; /* ← Было -1, теперь -2 — под частицами */
-  overflow: hidden;
+/* --- Затемнение фона (Вместо виньетки) --- */
+#vignette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); /* 40% темноты, меняйте 0.4 если нужно темнее/светлее */
+    box-shadow: none; /* Убираем углы */
+    pointer-events: none;
+    z-index: 4;
 }
 
-.video-bg video {
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
-  height: auto;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  object-fit: cover;
+/* --- Фоновое Видео --- */
+#video-bg {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    min-width: 100%;
+    min-height: 100%;
+    z-index: -1;
+    object-fit: cover;
+    
+    /* blur(8px) - сила размытия */
+    /* brightness(0.7) - яркость (1.0 = оригинал) */
+    filter: blur(8px) brightness(0.7);
+    
+    /* Увеличиваем масштаб, чтобы скрыть размытые края видео */
+    transform: scale(1.05); 
 }
 
-/* Частицы — поверх видео, но под контентом */
-#particles-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1; /* ← Между видео (-2) и карточкой (10) */
-  pointer-events: none; /* Чтобы не мешали кликам */
-  display: block;       /* ← Убирает inline-поведение */
-  margin: 0;           /* ← На всякий случай обнуляем отступы */
-  width: 0;
-  height: 0;
+/* --- Оверлей Входа --- */
+#overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease;
+    cursor: pointer;
 }
 
-/* === КОНТЕЙНЕР (оставляем как есть) === */
-.container {
-  width: 100%;
-  max-width: 420px;
+/* Анимация сканирующей линии */
+.scanline {
+    width: 100%;
+    height: 2px;
+    background: rgba(0, 255, 0, 0.8);
+    position: absolute;
+    animation: scan 2s linear infinite;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
 }
 
-.card {
-  animation: fadeIn 0.8s ease-out;
-  transition: transform 0.1s ease-out;
-  transform-style: preserve-3d;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  position: relative;
-  z-index: 10;
-
-  /* Стили карточки */
-  background: rgba(0, 0, 0, 0.4);
-backdrop-filter: blur(3px);
--webkit-backdrop-filter: blur(3px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  padding: 2rem;
-  text-align: center;
+@keyframes scan {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
 }
 
-/* === АВАТАР (оставляем, но подправим границу под стиль) === */
-.avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.2); /* Прозрачная граница */
-  object-fit: cover;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+/* --- Glassmorphism Карточка (Стиль) --- */
+.glass-card {
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+    transform-style: preserve-3d;
+    transform: perspective(1000px);
 }
 
-/* === ТЕКСТ (белый, с лёгкой тенью для читаемости) === */
-h1 {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+/* --- Тултипы (Подсказки) --- */
+.tooltip {
+    opacity: 0;
+    transform: translateY(10px) translateX(-50%);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    pointer-events: none;
 }
 
-.bio {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.85); /* Полупрозрачный белый */
-  opacity: 0.85;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
+.group:hover .tooltip {
+    opacity: 1;
+    transform: translateY(0) translateX(-50%);
 }
 
-/* === DISCORD STATUS (подправим цвета) === */
-.discord-status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.9);
+/* --- Анимация появления элементов --- */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.status-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #b388ff; /* Фиолетовый акцент вместо серого */
+.fade-in-stagger {
+    opacity: 0;
+    animation: slideIn 0.6s ease forwards;
 }
 
-.status-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-right: 0.5rem;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+
+/* --- Анимированный Текст --- */
+.animated-text {
+    color: white; 
+    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    background-size: 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: textFlow 5s ease infinite;
 }
 
-.status-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+@keyframes textFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-.status-text {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.9);
+/* --- Курсор Печатной Машинки --- */
+.cursor {
+    display: inline-block;
+    width: 2px;
+    background-color: white;
+    animation: blink 1s infinite;
 }
 
-.status-message {
-  font-family: 'Courier New', monospace;
-  font-style: italic;
-  color: #b388ff; /* Фиолетовый — выделяется на тёмном фоне */
-  opacity: 0.8;
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
 
-/* === ИКОНКИ СОЦСЕТЕЙ (белые, с hover-эффектом) === */
-.social-icons {
-  display: flex;
-  gap: 0.1rem;
-  justify-content: center;
-  margin: 1.5rem 0;
+/* --- Размытие при наведении (Blur Reveal) --- */
+.blur-reveal {
+    filter: blur(6px);
+    transition: filter 0.4s ease;
+    cursor: crosshair;
+}
+.blur-reveal:hover {
+    filter: blur(0px);
 }
 
-.social-icons a {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.8); /* Светлые иконки */
-  text-decoration: none;
-  transition: transform 0.2s, color 0.2s;
-  border-radius: 8px;
-  padding: 0.4rem;
+/* --- Стили Аудио Плеера --- */
+.player-bar {
+    -webkit-appearance: none;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 5px;
+    outline: none;
+    transition: 0.2s;
+}
+.player-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255,255,255,0.8);
 }
 
-.social-icons a:hover {
-  color: #ffffff; /* Белый при наведении */
-  transform: translateY(-3px);
+/* --- Технический Шрифт --- */
+.mono-font {
+    font-family: 'JetBrains Mono', monospace;
 }
 
-/* === ТУЛТИПЫ (под тёмный фон) === */
-.social-icons a::before {
-  content: attr(aria-label);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(8px);
-  background: rgba(0, 0, 0, 0.7); /* Тёмный полупрозрачный фон */
-  color: #ffffff; /* Белый текст */
-  padding: 0.5rem 0.9rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.25s ease;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-  z-index: 10;
+/* --- Контекстное Меню --- */
+.glass-menu {
+    background: rgba(15, 15, 15, 0.95);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    animation: menuFadeIn 0.2s ease-out;
 }
 
-.social-icons a:hover::before {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(-4px);
+@keyframes menuFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
-/* === УДАЛЯЕМ КНОПКУ ТЕМЫ (скрываем, если осталась) === */
-.theme-toggle {
-  display: none !important;
+.menu-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #cccccc;
+    text-align: left;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
 }
 
-/* === АДАПТИВ ПОД МОБИЛЬНЫЕ (оставляем) === */
-@media (max-width: 480px) {
-  .card {
-    padding: 1.5rem;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-  }
-
-  .social-icons {
-    gap: 0rem;
-  }
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
-/* Виньетка — только углы */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  background: 
-    radial-gradient(circle at 0% 0%, rgba(0,0,0,0.7) 0%, transparent 50%),
-    radial-gradient(circle at 100% 0%, rgba(0,0,0,0.7) 0%, transparent 50%),
-    radial-gradient(circle at 0% 100%, rgba(0,0,0,0.7) 0%, transparent 50%),
-    radial-gradient(circle at 100% 100%, rgba(0,0,0,0.7) 0%, transparent 50%);
-  z-index: 5;
+/* --- Стилизация iziToast (FORCE GLASS) --- */
+/* Используем селектор с высокой специфичностью */
+body .iziToast-wrapper .iziToast {
+    background: rgba(15, 15, 15, 0.85) !important; /* Полупрозрачный черный */
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
 }
 
-/* Иконка роли — только иконка, без текста */
-.role-icon-only {
-  z-index: 15;
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  transition: all 0.2s ease;
-  padding: -0.5rem;
-  border-radius: 8px;
-  cursor: default; /* Не ссылка — курсор как обычный div */
+/* Убираем стандартные тени/бордеры если есть */
+body .iziToast-wrapper .iziToast.iziToast-theme-dark {
+    box-shadow: none; 
 }
 
-.role-icon-only:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+/* Красивый шрифт */
+body .iziToast-wrapper .iziToast-body strong {
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+}
+body .iziToast-wrapper .iziToast-body p {
+    font-family: 'Outfit', sans-serif !important;
+    opacity: 0.7;
 }
 
-.role-icon-only svg {
-  color: #ffffff; /* Фиолетовый — как у тебя в статусе */
+/* --- 1. Белый Пульсирующий Неон (Никнейм) --- */
+.neon-pulse {
+    color: #fff; /* Чистый белый текст */
+    text-shadow: 
+        0 0 5px rgba(255, 255, 255, 0.2),
+        0 0 10px rgba(255, 255, 255, 0.2),
+        0 0 20px rgba(255, 255, 255, 0.2);
+    animation: whitePulse 3s ease-in-out infinite;
 }
 
-/* Тултип — показывается при наведении */
-.role-icon-only::before {
-  content: attr(aria-label);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(8px);
-  background: rgba(0, 0, 0, 0.7);
-  color: #ffffff;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.25s ease;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-  z-index: 15;
+@keyframes whitePulse {
+    0%, 100% {
+        text-shadow: 
+            0 0 5px rgba(255, 255, 255, 0.2),
+            0 0 10px rgba(255, 255, 255, 0.2),
+            0 0 20px rgba(255, 255, 255, 0.2);
+        opacity: 0.9;
+    }
+    50% {
+        text-shadow: 
+            0 0 5px rgba(255, 255, 255, 0.5),
+            0 0 15px rgba(255, 255, 255, 0.5),
+            0 0 30px rgba(255, 255, 255, 0.8),
+            0 0 50px rgba(255, 255, 255, 0.4);
+        opacity: 1;
+    }
 }
 
-.role-icon-only:hover::before {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(-4px);
-}
-
-/* Галочка верификации */
-.name-with-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* ← Центрируем содержимое */
-  gap: 0.4rem;
-  margin-bottom: 0.5rem;
-  width: 100%; /* ← Занимаем всю ширину карточки */
-}
-
-/* Контейнер для текста и частиц */
-.text-with-particles {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin-bottom: 1.5rem;
-  width: 105%;
-}
-
-/* Стиль текста — крупный + свечение */
-.glow-text {
-  font-size: 3.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow:
-    0 0 3px #ffffff,
-    0 0 6px rgba(255, 255, 255, 0.5),
-    0 0 10px rgba(255, 255, 255, 0.3);
-  margin: 0;
-  position: relative;
-  z-index: 2;
-  margin-left: -20px;
-}
-
-/* Canvas для частиц внутри текста */
-#text-particles-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* Галочка — поднимаем выше текста */
-.verified-badge {
-  position: relative;
-  z-index: 3;
-  color: #b388ff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.verified-badge svg {
-  width: 18px;
-  height: 18px;
-}
-
-.verified-badge::before {
-  content: attr(aria-label);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(8px);
-  background: rgba(0, 0, 0, 0.7);
-  color: #ffffff;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  z-index: 20;
-}
-
-.verified-badge:hover::before {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(-4px);
-}
-
-/* === Discord Status — как в клиенте === */
-.discord-status {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: -1rem;
-  padding: 0.5rem;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
-  width: 100%;
-}
-
-.status-avatar-wrapper {
-  position: relative;
-  width: 48px;
-  height: 48px;
-}
-
-.status-avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.status-indicator {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid rgba(0, 0, 0, 0.4);
-  background-color: #43b581; /* Зелёный — онлайн */
-}
-
-.status-info {
-  flex: 1;
-}
-
-.status-username {
-  display: block;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 0.2rem;
-  margin-left: -245px; /* Сдвигаем влево на десктопе */
-}
-
-/* На мобильных — отменяем сдвиг */
-@media (max-width: 768px) {
-  .status-username {
-    margin-left: -200px; /* Возвращаем в нормальное положение */
-  }
-}
-
-.status-activity {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.activity-icon {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.activity-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Класс для плавности ВСЕГО (картинки, точки) */
+.smooth-all {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
