@@ -1,6 +1,6 @@
 # 👾 engi // system - Personal Bio Link
 
-![Preview](https://github.com/engix3/mybio-rework/blob/main/screenshot.png)
+![Preview](https://raw.githubusercontent.com/engix3/mybio-rework/refs/heads/main/screenshot.png)
 
 > **Интерактивный личный хаб, стилизованный под терминал системы безопасности.**  
 > Включает синхронизацию статуса Discord в реальном времени, кастомный аудио-плеер и продвинутые визуальные эффекты.
