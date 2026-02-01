@@ -13,19 +13,24 @@ const videoBg = document.getElementById('video-bg');
 /* --- 1. ВХОД В СИСТЕМУ --- */
 let entered = false;
 
-// Переменные для калибровки гироскопа
-let initialBeta = null;
-let initialGamma = null;
-let tiltRAF = null; // Для requestAnimationFrame
+// Переменные для физики карточки (Плавность + Авто-центр)
+let currentTiltX = 0;
+let currentTiltY = 0;
+let targetTiltX = 0;
+let targetTiltY = 0;
 
-// Сразу запускаем соединение
+// "Плавающий центр" - запоминает среднее положение телефона
+let centerBeta = 0; 
+let centerGamma = 0;
+const centeringSpeed = 0.05; // Как быстро карточка возвращается в центр (меньше = медленнее)
+
 connectLanyard();
 
 overlay.addEventListener('click', () => {
     if (entered) return;
     entered = true;
 
-    // Воспроизведение звука
+    // Звук
     enterSound.volume = 0.4;
     enterSound.play().catch(e => console.log("Audio prevented"));
 
@@ -33,28 +38,30 @@ overlay.addEventListener('click', () => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (isMobile) {
-        // 1. Убиваем vanilla-tilt (мышь), чтобы не конфликтовал
+        // Убиваем эффект мыши, чтобы не конфликтовал
         const card = document.querySelector('.glass-card');
         if (card && card.vanillaTilt) {
             card.vanillaTilt.destroy();
         }
 
-        // 2. Запрашиваем доступ к гироскопу (iOS 13+)
+        // Запрос прав для iOS 13+
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
             DeviceOrientationEvent.requestPermission()
                 .then(response => {
                     if (response === 'granted') {
-                        window.addEventListener('deviceorientation', handleTilt);
+                        window.addEventListener('deviceorientation', handleMobileTilt);
+                        requestAnimationFrame(updateMobilePhysics); // Запускаем цикл анимации
                     }
                 })
                 .catch(console.error);
         } else {
-            // Android и старые iOS
-            window.addEventListener('deviceorientation', handleTilt);
+            // Android и обычный iOS
+            window.addEventListener('deviceorientation', handleMobileTilt);
+            requestAnimationFrame(updateMobilePhysics); // Запускаем цикл анимации
         }
     }
 
-    // Анимация исчезновения оверлея
+    // Анимация входа
     overlay.style.opacity = '0';
     setTimeout(() => {
         overlay.style.display = 'none';
@@ -77,47 +84,49 @@ overlay.addEventListener('click', () => {
     }, 800);
 });
 
-// Исправленная функция наклона (с калибровкой и сглаживанием)
-function handleTilt(e) {
-    if (!entered) return; // Не работаем пока не вошли
+// Обработчик данных с датчиков (Только получает данные)
+function handleMobileTilt(e) {
+    if (!entered) return;
+    
+    // Получаем сырые данные. Если null (бывает на старте), ставим 0
+    const rawBeta = e.beta || 0;   // Наклон вперед-назад (-180...180)
+    const rawGamma = e.gamma || 0; // Наклон влево-вправо (-90...90)
 
-    // Если данные пустые (иногда бывает на Android при старте)
-    if (e.beta === null || e.gamma === null) return;
+    // === МАГИЯ АВТО-ЦЕНТРИРОВАНИЯ ===
+    // Мы постоянно "подтягиваем" центр к текущему положению.
+    // Если вы держите телефон криво, это "криво" становится новым центром.
+    // Это устраняет дрейф и баги.
+    centerBeta += (rawBeta - centerBeta) * centeringSpeed;
+    centerGamma += (rawGamma - centerGamma) * centeringSpeed;
 
-    // Калибровка: запоминаем начальное положение при первом срабатывании
-    if (initialBeta === null) {
-        initialBeta = e.beta;
-        initialGamma = e.gamma;
-        return;
+    // Вычисляем отклонение от этого "плавающего" центра
+    let tiltX = rawGamma - centerGamma;
+    let tiltY = rawBeta - centerBeta;
+
+    // Ограничиваем угол (Clamp), чтобы карточка не переворачивалась
+    const limit = 25; 
+    targetTiltX = Math.max(-limit, Math.min(limit, tiltX));
+    targetTiltY = Math.max(-limit, Math.min(limit, tiltY));
+}
+
+// Цикл анимации (Плавность / Lerp)
+function updateMobilePhysics() {
+    if (!entered) return;
+
+    const card = document.querySelector('.glass-card');
+    if (card) {
+        // Линейная интерполяция (Lerp) для супер-плавности
+        // 0.1 - коэффициент плавности. Меньше = плавнее, но медленнее.
+        currentTiltX += (targetTiltX - currentTiltX) * 0.1;
+        currentTiltY += (targetTiltY - currentTiltY) * 0.1;
+
+        // Применяем стили
+        // rotateY - вращение по вертикальной оси (от движения влево-вправо)
+        // rotateX - вращение по горизонтальной оси (от движения вперед-назад, инвертировано)
+        card.style.transform = `perspective(1000px) rotateY(${currentTiltX}deg) rotateX(${-currentTiltY}deg)`;
     }
 
-    // Используем requestAnimationFrame для плавности
-    if (tiltRAF) cancelAnimationFrame(tiltRAF);
-
-    tiltRAF = requestAnimationFrame(() => {
-        const card = document.querySelector('.glass-card');
-        if (!card) return;
-
-        // Вычисляем разницу (дельта) между текущим положением и начальным
-        let tiltX = e.gamma - initialGamma; // Наклон влево/вправо
-        let tiltY = e.beta - initialBeta;   // Наклон вперед/назад
-
-        // Ограничиваем углы (Clamp), чтобы не крутилось бешено
-        // Max 20 градусов в любую сторону
-        const maxTilt = 20; 
-        
-        if (tiltX > maxTilt) tiltX = maxTilt;
-        if (tiltX < -maxTilt) tiltX = -maxTilt;
-        
-        if (tiltY > maxTilt) tiltY = maxTilt;
-        if (tiltY < -maxTilt) tiltY = -maxTilt;
-
-        // Применяем. 
-        // rotateY вращает вокруг вертикальной оси (от движения влево-вправо)
-        // rotateX вращает вокруг горизонтальной оси (от движения вперед-назад)
-        // Меняем знаки, чтобы движение было естественным
-        card.style.transform = `perspective(1000px) rotateY(${tiltX}deg) rotateX(${-tiltY}deg)`;
-    });
+    requestAnimationFrame(updateMobilePhysics);
 }
 
 /* --- 2. АУДИО ПЛЕЕР (MINIMAL DESIGN) --- */
