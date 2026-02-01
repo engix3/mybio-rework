@@ -7,8 +7,18 @@
 
 ---
 
-## 🚀 Демо
-### [🌐 Открыть сайт](https://engi-bio.vercel.app/)
+# [🌐 Открыть сайт](https://engi-bio.vercel.app/)
+
+---
+
+## 💻 Стек Технологий
+
+![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+![Vercel](https://img.shields.io/badge/Vercel-000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
+![Discord](https://img.shields.io/badge/Lanyard_API-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)
+![Gemini 3 Pro](https://img.shields.io/badge/Gemini_3_Pro-8E75B2?style=for-the-badge&logo=google-gemini&logoColor=white)
 
 ---
 
@@ -34,16 +44,6 @@
 *   **Экран Входа:** "Биометрический" оверлей с эффектом печатной машинки.
 *   **Умные Уведомления:** Стильные стеклянные тосты (iziToast) при копировании ссылок.
 *   **Гироскоп (Mobile):** 3D-эффект наклона карточки при повороте телефона.
-
----
-
-## 💻 Стек Технологий
-
-![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
-![Discord](https://img.shields.io/badge/Lanyard_API-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)
-![Gemini 3 Pro](https://img.shields.io/badge/AI_Assistant-Gemini_3_Pro-8E75B2?style=for-the-badge&logo=google&logoColor=white)
 
 ---
 
