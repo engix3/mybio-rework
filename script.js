@@ -36,31 +36,18 @@ overlay.addEventListener('click', async () => {
         enterSound.play().catch(() => {});
     }
 
-    // --- MOBILE PHYSICS SETUP ---
+    // --- MOBILE PHYSICS SETUP (ИЗМЕНЕНО: ГИРОСКОП ОТКЛЮЧЕН) ---
     isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
     
     if (isMobile) {
-        // Удаляем библиотеку vanilla-tilt, чтобы не мешала
+        // 1. Отключаем библиотеку vanilla-tilt (эффект наклона), чтобы карточка была ровной
         const card = document.querySelector('.glass-card');
-        if (card && card.vanillaTilt) card.vanillaTilt.destroy();
-
-        // Запрос прав для iOS 13+
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-            try {
-                const permissionState = await DeviceOrientationEvent.requestPermission();
-                if (permissionState === 'granted') {
-                    window.addEventListener('deviceorientation', handleMobileTilt);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        } else {
-            // Android и старые iOS
-            window.addEventListener('deviceorientation', handleMobileTilt);
+        if (card && card.vanillaTilt) {
+            card.vanillaTilt.destroy(); 
         }
-        
-        // Запускаем цикл анимации физики
-        requestAnimationFrame(updateMobilePhysics);
+
+        // 2. МЫ УДАЛИЛИ ВЕСЬ КОД, СВЯЗАННЫЙ С deviceorientation и requestAnimationFrame
+        // Карточка теперь будет просто статичной картинкой на фоне видео.
     }
     // ----------------------------
 
@@ -422,44 +409,6 @@ function setGreeting() {
     const h = new Date().getHours();
     const el = document.getElementById('time-greeting');
     if(el) el.textContent = h<6?"You should be sleeping. 😴":h<12?"Good morning. 🌅":h<18?"Good afternoon. ☀️":"Good evening. 🌙";
-}
-
-// === GYROSCOPE FIX (REWRITTEN) ===
-// Этот код теперь использует "точку отсчета" (initial)
-// чтобы телефон всегда был в 0, когда ты зашел, 
-// а наклон считался от этого положения.
-
-function handleMobileTilt(e) {
-    if (!entered) return;
-    
-    // Если это первый ивент - запоминаем положение
-    if (initialGamma === 0 && initialBeta === 0) {
-        initialGamma = e.gamma || 0;
-        initialBeta = e.beta || 0;
-    }
-
-    // Считаем разницу
-    let tiltX = (e.gamma || 0) - initialGamma;
-    let tiltY = (e.beta || 0) - initialBeta;
-
-    // Ограничиваем углы (clamp), чтобы карточка не переворачивалась
-    const limit = 25; // Максимальный угол наклона
-    targetTiltX = Math.max(-limit, Math.min(limit, tiltX));
-    targetTiltY = Math.max(-limit, Math.min(limit, tiltY));
-}
-
-function updateMobilePhysics() {
-    const card = document.querySelector('.glass-card');
-    if (!entered || !card) return;
-    
-    // Плавное приближение (Lerp) для мягкости
-    currentTiltX += (targetTiltX - currentTiltX) * 0.1;
-    currentTiltY += (targetTiltY - currentTiltY) * 0.1;
-
-    // Применяем
-    card.style.transform = `perspective(1000px) rotateY(${currentTiltX}deg) rotateX(${-currentTiltY}deg)`;
-    
-    requestAnimationFrame(updateMobilePhysics);
 }
 
 // === COPY & CONTEXT ===
