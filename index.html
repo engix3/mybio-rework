@@ -12,21 +12,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Quicksand:wght@300;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    
-    <style>
-        /* Popup Громкости */
-        .volume-popup {
-            transition: opacity 0.2s, visibility 0.2s;
-            transition-delay: 0.3s;
-            visibility: hidden;
-            opacity: 0;
-        }
-        .group\/vol:hover .volume-popup {
-            visibility: visible;
-            opacity: 1;
-            transition-delay: 0s;
-        }
-    </style>
 </head>
 <body class="text-white min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden relative">
 
@@ -55,7 +40,7 @@
     <div id="noise"></div>
     <div id="vignette"></div>
     <video id="video-bg" autoplay loop muted playsinline>
-        <source src="video/red-anime-eye-moewalls-com.mp4" type="video/mp4">
+        <source src="video/miyabi-fox-zenless-zone-zero-moewalls-com.mp4" type="video/mp4">
     </video>
 
     <!-- Tech Stats -->
@@ -69,137 +54,137 @@
 
     <!-- Main Card -->
     <div id="main-container" class="relative z-10 w-full max-w-md p-4 hidden flex-grow flex items-center justify-center">
+        <!-- glass-card -->
         <div class="glass-card rounded-2xl p-8 flex flex-col items-center text-center relative overflow-hidden w-full" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
             
             <!-- Spotlight Layer -->
             <div id="main-spotlight" class="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0" 
-                style="background: radial-gradient(800px circle at var(--x) var(--y), rgba(255,255,255,0.07), transparent 40%);">
+                style="background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.1), transparent 40%);">
             </div>
 
-            <!-- Avatar -->
-            <div class="relative mb-6 fade-in-stagger z-10">
-               <img id="discord-avatar" 
-                 src="" 
-                 alt="Profile" 
-                 class="relative w-32 h-32 rounded-full border-4 border-[#333] object-cover shadow-2xl transition-all duration-500 opacity-0">
-            </div>
+            <!-- Content Wrapper -->
+            <div class="relative z-10 w-full flex flex-col items-center">
 
-            <!-- Nickname -->
-            <h1 class="text-6xl font-black mb-2 tracking-tighter drop-shadow-2xl fade-in-stagger delay-100">
-                <span class="neon-pulse font-[Quicksand]">engi</span>
-            </h1>
-            
-            <!-- Typewriter -->
-            <div class="h-6 mb-1 flex items-center justify-center space-x-1 fade-in-stagger delay-100">
-                <span class="text-neutral-400 font-medium text-sm mono-font" id="typewriter"></span><span class="cursor h-4"></span>
-            </div>
-            
-            <!-- Greeting -->
-            <div id="time-greeting" class="text-[10px] text-neutral-500 mb-6 mono-font fade-in-stagger delay-100"></div>
+                <!-- Avatar -->
+                <div class="relative mb-6 fade-in-stagger">
+                   <img id="discord-avatar" 
+                     src="" 
+                     alt="Profile" 
+                     class="relative w-32 h-32 rounded-full border-4 border-[#333] object-cover shadow-2xl transition-all duration-500 opacity-0 bg-neutral-900">
+                </div>
 
-            <!-- Discord Status -->
-            <div id="discord-card" class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-200 hover:bg-[#151515] transition cursor-pointer group shadow-lg hidden">
-                <div class="relative shrink-0">
-                    <img id="discord-card-avatar" src="" class="w-10 h-10 rounded-full object-cover bg-neutral-800 smooth-all" alt="">
-                    <div id="discord-status-dot" class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] bg-gray-500 smooth-all"></div>
+                <!-- Nickname -->
+                <h1 class="text-6xl font-black mb-2 tracking-tighter drop-shadow-2xl fade-in-stagger delay-100">
+                    <span class="neon-pulse font-[Quicksand]">engi</span>
+                </h1>
+                
+                <!-- Typewriter -->
+                <div class="h-6 mb-1 flex items-center justify-center space-x-1 fade-in-stagger delay-100">
+                    <span class="text-neutral-400 font-medium text-sm mono-font" id="typewriter"></span><span class="cursor h-4"></span>
                 </div>
                 
-                <div class="overflow-hidden w-full flex flex-col justify-center">
-                    <div class="text-sm font-bold text-white truncate leading-tight flex items-center gap-1">
-                        <span id="discord-username">User</span>
-                        <i class="fa-brands fa-discord text-[10px] text-[#5865F2] ml-0.5" title="Discord User"></i> 
-                    </div>
-                    <div class="text-[11px] text-neutral-400 truncate leading-tight mt-0.5" id="discord-status-text">Loading...</div>
-                    <div class="text-[10px] text-neutral-500 truncate leading-tight" id="discord-sub-text"></div>
-                </div>
-            </div>
+                <!-- Greeting -->
+                <div id="time-greeting" class="text-[10px] text-neutral-500 mb-6 mono-font fade-in-stagger delay-100"></div>
 
-            <!-- Audio Player -->
-            <div class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-300 hover:bg-white/5 transition duration-300">
-                
-                <button id="play-btn" class="shrink-0 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition shadow-lg shadow-white/10">
-                    <i class="fa-solid fa-play text-sm ml-0.5"></i>
-                </button>
-
-                <div class="flex-1 min-w-0 flex flex-col justify-center gap-1">
-                    <div class="flex flex-col justify-end px-0.5 min-h-[26px]">
-                        <a href="https://soundcloud.com/stovyyyyy/e2e786a3-3c25-44cb-961b-8e96edaf95fa" target="_blank" class="flex items-center gap-1.5 font-bold text-white text-xs hover:text-orange-400 transition group/track w-fit max-w-full">
-                            <span class="truncate">MineCRaFT SpiDeRs w/ ocelot //[ o,---,o ]\\ ♨️ @prod me</span> 
-                            <i class="fa-brands fa-soundcloud text-[10px] text-orange-500 transition shrink-0"></i>
-                        </a>
-                        <span class="text-[10px] text-neutral-400 truncate font-medium -mt-0.5">Stovyy, ocelot</span>
+                <!-- Discord Status -->
+                <div id="discord-card" onclick="copyDiscordNick()" class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-200 hover:bg-[#151515] transition cursor-pointer group shadow-lg hidden relative active:scale-95 duration-200">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center rounded-xl z-20">
+                        <span class="text-xs font-bold text-white tracking-widest uppercase"><i class="fa-regular fa-copy mr-2"></i>Copy ID</span>
                     </div>
 
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <div class="relative w-full h-1 flex items-center group/seek">
-                            <input type="range" id="seek-slider" class="absolute inset-0 z-20 w-full h-4 -top-1.5 opacity-0 cursor-pointer margin-0" value="0" max="100">
-                            <div class="relative w-full h-1 bg-white/10 rounded-full z-10 pointer-events-none overflow-hidden">
-                                <div id="seek-fill" class="absolute top-0 left-0 h-full bg-white rounded-full transition-none"></div>
-                            </div>
-                            <div id="seek-thumb" class="absolute h-2.5 w-2.5 bg-white rounded-full shadow shadow-black/50 opacity-0 group-hover/seek:opacity-100 transition-opacity duration-200 pointer-events-none z-10 top-1/2 -translate-y-1/2" style="left: 0%;"></div>
-                        </div>
-                        <span class="text-[9px] text-neutral-500 mono-font shrink-0 w-6 text-right" id="current-time">0:00</span>
-                    </div>
-                </div>
-
-                <div class="shrink-0 relative group/vol flex items-center justify-center h-full">
-                    <div class="cursor-pointer p-2 -mr-2">
-                        <i class="fa-solid fa-volume-high text-neutral-400 text-xs group-hover/vol:text-white transition"></i>
+                    <div class="relative shrink-0 z-10">
+                        <img id="discord-card-avatar" src="" class="w-10 h-10 rounded-full object-cover bg-neutral-800 smooth-all" alt="">
+                        <div id="discord-status-dot" class="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-[2px] border-[#111] bg-gray-500 transition-all duration-300 flex items-center justify-center overflow-hidden"></div>
                     </div>
                     
-                    <div class="volume-popup absolute bottom-6 left-1/2 -translate-x-1/2 w-8 h-28 bg-transparent flex flex-col items-center justify-end z-50">
-                        <div class="w-8 h-24 bg-[#111] border border-white/10 rounded-lg flex items-end justify-center pb-3 shadow-xl relative overflow-visible">
-                            <!-- Тултип удален -->
-                            <div class="absolute w-1 h-16 bg-neutral-700 rounded-full bottom-3 pointer-events-none"></div>
-                            <input type="range" id="volume-slider" class="relative z-10 w-1 h-16 appearance-none bg-transparent outline-none cursor-pointer" orient="vertical" value="15" max="100" style="-webkit-appearance: slider-vertical;">
+                    <div class="overflow-hidden w-full flex flex-col justify-center z-10">
+                        <div class="text-sm font-bold text-white truncate leading-tight flex items-center gap-1">
+                            <span id="discord-username" class="truncate smooth-all">User</span>
+                            <i class="fa-brands fa-discord text-[10px] text-[#5865F2] ml-0.5 shrink-0" title="Discord User"></i> 
                         </div>
-                        <div class="w-full h-2 bg-transparent"></div>
+                        <div class="text-[11px] text-neutral-400 truncate leading-tight mt-0.5 w-full smooth-all" id="discord-status-text">Loading...</div>
+                        <div class="text-[10px] text-neutral-500 truncate leading-tight w-full smooth-all" id="discord-sub-text"></div>
                     </div>
                 </div>
 
-            </div>
+                <!-- Last.fm Integration (Fixed Layout) -->
+                <div id="fm-container" class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-300 hover:bg-white/5 transition duration-500 overflow-hidden">
+                    
+                    <!-- Cover Art -->
+                    <a id="fm-link" href="https://last.fm/" target="_blank" class="shrink-0 relative w-12 h-12 group/cover cursor-pointer">
+                        <div class="absolute inset-0 bg-[#1a1a1a] rounded-md flex items-center justify-center border border-white/10 z-0">
+                            <i class="fa-solid fa-music text-neutral-600 text-sm"></i>
+                        </div>
+                        <img id="fm-art" src="" 
+                             class="relative z-10 w-full h-full rounded-md object-cover transition-opacity duration-500 opacity-0" 
+                             alt="Art">
+                        <div class="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition bg-black/40 rounded-md">
+                             <i class="fa-brands fa-lastfm text-white text-lg drop-shadow-md"></i>
+                        </div>
+                    </a>
 
-            <!-- Socials -->
-            <div class="flex flex-wrap justify-center gap-3 mb-2 fade-in-stagger delay-400 max-w-[95%]">
-                <a href="https://discord.com/users/1257675618175422576" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                    <i class="fa-brands fa-discord text-lg"></i>
-                </a>
-                <a href="https://github.com/engix3" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                    <i class="fa-brands fa-github text-lg"></i>
-                </a>
-                <a href="https://t.me/Engih1" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                    <i class="fa-brands fa-telegram text-lg"></i>
-                </a>
-                <a href="https://vk.com/engiyt" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                    <i class="fa-brands fa-vk text-lg"></i>
-                </a>
-                <a href="https://www.tiktok.com/@engi_tt" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                    <i class="fa-brands fa-tiktok text-lg"></i>
-                </a>
-                <a href="https://www.youtube.com/@engiX3" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                    <i class="fa-brands fa-youtube text-lg"></i>
-                </a>
-                <a href="https://steamcommunity.com/id/engioff/" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                    <i class="fa-brands fa-steam text-lg"></i>
-                </a>
-                <a href="https://www.roblox.com/users/540243341/profile" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                    <svg class="w-5 h-5 fill-current text-white group-hover:scale-110 transition-transform duration-300" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.926 23.998 0 18.892 5.075.002 24 5.108ZM15.348 10.09l-5.282-1.453-1.414 5.273 5.282 1.453z"/></svg>
-                </a>
-            </div>
+                    <!-- Info & Controls (Strict Layout) -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center h-full transition-opacity duration-300" id="fm-info">
+                        
+                        <!-- Top: Status -->
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5 leading-none" id="fm-status">LOADING</span>
+                        </div>
+        
+                        <!-- Middle: Title + Icons (Inline) -->
+                        <div class="flex items-center gap-2 w-full leading-none">
+                            <a id="fm-song-link" href="#" target="_blank" class="truncate text-xs font-bold text-white hover:text-red-400 transition leading-none">
+                                <span id="fm-song-title">Searching...</span>
+                            </a>
 
-        </div>
-    </div>
+                            <!-- Icons Wrapper (prevent shrink) -->
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button onclick="copyLastFM()" class="text-neutral-600 hover:text-white transition-colors cursor-pointer" title="Copy Track Name">
+                                    <i class="fa-regular fa-copy text-[10px]"></i>
+                                </button>
+                                <a href="https://last.fm/" target="_blank" class="text-[#b90000] hover:text-red-400 transition-colors">
+                                    <i class="fa-brands fa-lastfm text-[10px]"></i>
+                                </a>
+                            </div>
+                        </div>
+        
+                        <!-- Bottom: Artist -->
+                        <div class="text-[10px] text-neutral-400 font-medium truncate w-full mt-1 leading-none" id="fm-artist">
+                            ...
+                        </div>
+                    </div>
+                </div>
 
-    <!-- GEO/IP -->
-    <div id="footer-info" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-xs text-center hidden fade-in-stagger delay-400">
-        <div class="rounded-lg p-2 bg-black/20 backdrop-blur-md blur-reveal relative group cursor-crosshair">
-            <div class="absolute inset-0 flex items-center justify-center text-[10px] text-green-500 font-bold opacity-100 group-hover:opacity-0 transition duration-300 uppercase tracking-widest">
-                System Endpoint Data
-            </div>
-            <div class="text-[10px] mono-font text-green-400 flex justify-between px-2 opacity-0 group-hover:opacity-100 transition duration-300">
-                <span id="user-ip">127.0.0.1</span>
-                <span id="user-city">Unknown</span>
-            </div>
+                <!-- Socials -->
+                <div class="flex flex-wrap justify-center gap-3 mb-2 fade-in-stagger delay-400 max-w-[95%]">
+                    <a href="https://discord.com/users/1257675618175422576" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <i class="fa-brands fa-discord text-lg"></i>
+                    </a>
+                    <a href="https://github.com/engix3" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <i class="fa-brands fa-github text-lg"></i>
+                    </a>
+                    <a href="https://t.me/Engih1" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <i class="fa-brands fa-telegram text-lg"></i>
+                    </a>
+                    <a href="https://vk.com/engiyt" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <i class="fa-brands fa-vk text-lg"></i>
+                    </a>
+                    <a href="https://www.tiktok.com/@engi_tt" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <i class="fa-brands fa-tiktok text-lg"></i>
+                    </a>
+                    <a href="https://www.youtube.com/@engiX3" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <i class="fa-brands fa-youtube text-lg"></i>
+                    </a>
+                    <a href="https://steamcommunity.com/id/engioff/" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <i class="fa-brands fa-steam text-lg"></i>
+                    </a>
+                    <a href="https://www.roblox.com/users/540243341/profile" target="_blank" class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <svg class="w-5 h-5 fill-current text-white group-hover:scale-110 transition-transform duration-300" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.926 23.998 0 18.892 5.075.002 24 5.108ZM15.348 10.09l-5.282-1.453-1.414 5.273 5.282 1.453z"/></svg>
+                    </a>
+                </div>
+
+            </div> <!-- End Content Wrapper -->
+
         </div>
     </div>
 
