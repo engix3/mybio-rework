@@ -119,12 +119,30 @@ function initTechStats() {
     }, 2000);
 }
 
-// === 2. LAST.FM (SMOOTH) ===
-let lastSongName = "";
+// === 2. LAST.FM (FINAL FIX: AUTO-UPDATE) ===
 
+// 1. Эти переменные ОБЯЗАТЕЛЬНО должны быть снаружи функции
+let lastSongName = "";
+let lastIsPlaying = null; 
+
+// 2. Функция поиска красивых обложек (iTunes)
+async function findBestArt(artist, track, lastFmImage) {
+    try {
+        const query = `${artist} ${track}`;
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=1`);
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+            return data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
+        }
+    } catch (e) {}
+    return lastFmImage || "";
+}
+
+// 3. Основная функция
 async function updateLastFM() {
     if(!LASTFM_USERNAME || !LASTFM_API_KEY) return;
     
+    // Элементы DOM
     const songTitleEl = document.getElementById('fm-song-title');
     const artistEl = document.getElementById('fm-artist');
     const artEl = document.getElementById('fm-art');
@@ -135,6 +153,7 @@ async function updateLastFM() {
 
     if(!songTitleEl) return;
 
+    // URL с защитой от кэша (Date.now())
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${LASTFM_USERNAME}&api_key=${LASTFM_API_KEY}&format=json&limit=1&_=${Date.now()}`;
     
     try {
@@ -147,27 +166,39 @@ async function updateLastFM() {
         const currentSongName = track.name;
         const currentArtist = track.artist['#text'];
         const trackUrl = track.url;
-        const isNowPlaying = track['@attr'] && track['@attr'].nowplaying === "true";
-
-        let rawArt = "";
-        if(track.image && track.image.length > 3 && track.image[3]['#text']) rawArt = track.image[3]['#text'];
-        else if (track.image && track.image.length > 2 && track.image[2]['#text']) rawArt = track.image[2]['#text'];
         
-        const isDefault = rawArt.includes("2a96cbd8b46e442fc41c2b86b821562f") || rawArt === "";
+        // Статус: true если играет сейчас, false если на паузе
+        const isNowPlaying = (track['@attr'] && track['@attr'].nowplaying === "true") ? true : false;
 
+        // --- ЛОГИКА 1: ОБНОВЛЕНИЕ ПЕСНИ ---
         if (lastSongName !== currentSongName) {
+            console.log("LastFM: Song changed to", currentSongName); // Лог для проверки
             lastSongName = currentSongName;
+            
+            // Скрываем старое
             infoContainer.style.opacity = '0';
             artEl.style.opacity = '0';
 
+            // Получаем картинку LastFM
+            let rawLastFmArt = "";
+            if(track.image && track.image.length > 3 && track.image[3]['#text']) rawLastFmArt = track.image[3]['#text'];
+            else if (track.image && track.image.length > 2 && track.image[2]['#text']) rawLastFmArt = track.image[2]['#text'];
+            
+            const isDefault = rawLastFmArt.includes("2a96cbd8b46e442fc41c2b86b821562f") || rawLastFmArt === "";
+            const artCandidate = isDefault ? null : rawLastFmArt;
+
+            // Ищем лучшую обложку
+            const finalArtUrl = await findBestArt(currentArtist, currentSongName, artCandidate);
+
+            // Показываем новое
             setTimeout(() => {
                 songTitleEl.textContent = currentSongName;
                 artistEl.textContent = currentArtist;
                 songLinkEl.href = trackUrl;
                 if(linkEl) linkEl.href = trackUrl;
 
-                if (!isDefault) {
-                    artEl.src = rawArt;
+                if (finalArtUrl) {
+                    artEl.src = finalArtUrl;
                     artEl.onload = () => { artEl.style.opacity = '1'; };
                 } else {
                     artEl.style.opacity = '0';
@@ -176,22 +207,32 @@ async function updateLastFM() {
             }, 300);
         }
 
-        if (statusEl) {
+        // --- ЛОГИКА 2: ОБНОВЛЕНИЕ СТАТУСА (ИГРАЕТ / НЕ ИГРАЕТ) ---
+        // Проверяем отдельно! Даже если песня та же, статус может смениться.
+        if (lastIsPlaying !== isNowPlaying) {
+            console.log("LastFM: Status changed to", isNowPlaying ? "Playing" : "Paused"); // Лог
+            lastIsPlaying = isNowPlaying;
+
             if (isNowPlaying) {
-                if (statusEl.textContent !== "LISTENING NOW") {
-                    statusEl.textContent = "LISTENING NOW";
-                    statusEl.className = "text-[9px] font-bold text-green-500 uppercase tracking-wider mb-0.5 animate-pulse smooth-all";
-                }
+                statusEl.textContent = "LISTENING NOW";
+                statusEl.className = "text-[9px] font-bold text-green-500 uppercase tracking-wider mb-0.5 animate-pulse smooth-all";
             } else {
-                if (statusEl.textContent !== "LAST TRACK") {
-                    statusEl.textContent = "LAST TRACK";
-                    statusEl.className = "text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5 smooth-all";
-                }
+                statusEl.textContent = "LAST TRACK";
+                statusEl.className = "text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5 smooth-all";
             }
         }
-    } catch (error) {}
+
+    } catch (error) {
+        console.error("LastFM Error:", error);
+    }
 }
+
+// 4. ЗАПУСК ЦИКЛА ОБНОВЛЕНИЯ (Без этого ничего меняться не будет!)
+// Запускаем первый раз сразу
+updateLastFM();
+// И потом каждые 3 секунды
 setInterval(updateLastFM, 3000);
+
 
 // === 3. DISCORD (ULTRA SMOOTH) ===
 let discordTimer = null;
@@ -453,12 +494,12 @@ let linkToCopy = null;
 function handleCopyAction() {
     const url = linkToCopy || window.location.href;
     navigator.clipboard.writeText(url).then(() => {
-        iziToast.show({ theme: 'dark', icon: 'fa-solid fa-link', title: 'Link', message: 'Copied', position: 'topCenter', progressBarColor: '#00ff88' });
+        iziToast.show({ theme: 'dark', icon: 'fa-solid fa-link', title: 'Link', message: 'Copied', position: 'topCenter', progressBarColor: '#00ff88', timeout: 2000 });
     });
 }
 function copyDiscordNick() {
     navigator.clipboard.writeText("engi").then(() => {
-        iziToast.show({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2' });
+        iziToast.show({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2', timeout: 2000 });
     });
 }
 function copyLastFM() {
@@ -529,3 +570,21 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// === SMOOTH VIDEO LOAD ===
+const videoElement = document.getElementById('video-bg');
+
+function onVideoReady() {
+    // Добавляем класс, который плавно меняет opacity с 0 на 1
+    videoElement.classList.add('video-ready');
+}
+
+// Проверяем, может видео уже загрузилось (из кэша)
+if (videoElement.readyState >= 3) {
+    onVideoReady();
+} else {
+    // Если нет, ждем события, когда данных будет достаточно для воспроизведения
+    videoElement.addEventListener('canplaythrough', onVideoReady, { once: true });
+    // Подстраховка: если canplaythrough тупит, сработает просто при загрузке данных
+    videoElement.addEventListener('loadeddata', onVideoReady, { once: true });
+}

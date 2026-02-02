@@ -45,7 +45,22 @@ body {
     transition: opacity 1.5s ease;
 }
 
-/* Видео Фон */
+/* --- ФОНОВЫЕ СЛОИ --- */
+
+/* Статичная картинка (Z-Index -2, самый нижний) */
+#bg-poster {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2; /* Лежит ПОД видео */
+    filter: blur(8px) brightness(0.7); /* Тот же эффект, что у видео */
+    transform: scale(1.05);
+}
+
+/* Видео (Z-Index -1, лежит НАД картинкой) */
 #video-bg {
     position: fixed;
     right: 0;
@@ -54,12 +69,20 @@ body {
     min-height: 100%;
     z-index: -1;
     object-fit: cover;
+    
     filter: blur(8px) brightness(0.7);
     transform: scale(1.05); 
-    transition: filter 1.5s ease, transform 1.5s ease;
+    
+    opacity: 0; /* Скрыто при загрузке */
+    transition: filter 1.5s ease, transform 1.5s ease, opacity 2s ease-in-out;
 }
 
-/* Класс "Чистого видео" (для режима Insert) */
+/* Когда JS добавит этот класс, видео плавно появится */
+#video-bg.video-ready {
+    opacity: 1;
+}
+
+/* Класс для очистки (клавиша Insert) */
 .video-clean {
     filter: blur(0px) brightness(1.0) !important;
     transform: scale(1.0) !important;
