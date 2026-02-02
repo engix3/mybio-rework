@@ -48,13 +48,19 @@
         <source src="video/miyabi-fox-zenless-zone-zero-moewalls-com.mp4" type="video/mp4">
     </video>
 
-    <!-- Tech Stats -->
-    <div id="tech-stats" class="fixed top-4 right-4 z-50 text-right mono-font text-[10px] text-green-500 opacity-80 pointer-events-none hidden">
+    <!-- Tech Stats (Mobile Optimized) -->
+    <!-- Изменения: 
+         1. text-[9px] для мобилок, text-[10px] для ПК (md:text-[10px])
+         2. Отступы top-3 right-3 для мобилок, top-4 right-4 для ПК
+    -->
+    <div id="tech-stats" class="fixed top-3 right-3 md:top-4 md:right-4 z-50 text-right mono-font text-[9px] md:text-[10px] text-green-500 opacity-80 pointer-events-none hidden flex flex-col items-end">
         <div>FPS: <span id="fps-counter">60</span></div>
         <div>PING: <span id="ping-counter">14</span>ms</div>
         <div id="platform-display">PLATFORM: <span class="text-green-500">...</span></div>
-        <div class="h-px bg-white/20 w-full my-1"></div>
-        <div class="mt-1 text-green/50">HIDE MENU: <span class="text-green">INSERT</span></div>
+        
+        <!-- Линия и подсказка INSERT скрыты на мобилках (hidden), но видны на ПК (md:block) -->
+        <div class="hidden md:block h-px bg-white/20 w-full my-1"></div>
+        <div class="hidden md:block mt-1 text-green/50">HIDE MENU: <span class="text-green">INSERT</span></div>
     </div>
 
     <!-- Main Card -->
