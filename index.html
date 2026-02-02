@@ -112,7 +112,7 @@
                     </div>
                 </div>
 
-                <!-- Last.fm Integration (Fixed Layout) -->
+                <!-- Last.fm Integration (Compact & Safe) -->
                 <div id="fm-container" class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-300 hover:bg-white/5 transition duration-500 overflow-hidden">
                     
                     <!-- Cover Art -->
@@ -128,33 +128,40 @@
                         </div>
                     </a>
 
-                    <!-- Info & Controls (Strict Layout) -->
+                    <!-- Info & Controls -->
                     <div class="flex-1 min-w-0 flex flex-col justify-center h-full transition-opacity duration-300" id="fm-info">
                         
                         <!-- Top: Status -->
                         <div class="flex items-center justify-between">
-                            <span class="text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5 leading-none" id="fm-status">LOADING</span>
+                            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5 leading-none" id="fm-status">LOADING</span>
                         </div>
         
-                        <!-- Middle: Title + Icons (Inline) -->
-                        <div class="flex items-center gap-2 w-full leading-none">
-                            <a id="fm-song-link" href="#" target="_blank" class="truncate text-xs font-bold text-white hover:text-red-400 transition leading-none">
+                        <!-- Middle: Title + Icons -->
+                        <div class="flex items-end gap-2 w-full leading-none">
+                            <!-- pb-[2px] спасает хвостики букв (g, y, j), но не ломает верстку -->
+                            <a id="fm-song-link" href="#" target="_blank" class="truncate text-xs font-bold text-white hover:text-red-400 transition leading-none pb-[2px]">
                                 <span id="fm-song-title">Searching...</span>
                             </a>
 
-                            <!-- Icons Wrapper (prevent shrink) -->
-                            <div class="flex items-center gap-2 shrink-0">
+                            <!-- Icons Wrapper -->
+                            <div class="flex items-center gap-2 shrink-0 pb-[2px]">
                                 <button onclick="copyLastFM()" class="text-neutral-600 hover:text-white transition-colors cursor-pointer" title="Copy Track Name">
                                     <i class="fa-regular fa-copy text-[10px]"></i>
                                 </button>
-                                <a href="https://last.fm/" target="_blank" class="text-[#b90000] hover:text-red-400 transition-colors">
-                                    <i class="fa-brands fa-lastfm text-[10px]"></i>
-                                </a>
+                                
+                                <div class="text-[#b90000]" title="Source: Last.fm">
+                                    <i class="fa-brands fa-lastfm text-[11px]"></i>
+                                </div>
+
+                                <div class="text-[#ffffff]" title="Artwork Source: iTunes API">
+                                    <i class="fa-brands fa-apple text-[11px]"></i>
+                                </div>
                             </div>
                         </div>
         
                         <!-- Bottom: Artist -->
-                        <div class="text-[10px] text-neutral-400 font-medium truncate w-full mt-1 leading-none" id="fm-artist">
+                        <!-- mt-[1px] вместо mt-0.5 или mt-1 прижимает артиста ближе к названию -->
+                        <div class="text-[10px] text-neutral-400 font-medium truncate w-full mt-[1px] leading-none" id="fm-artist">
                             ...
                         </div>
                     </div>

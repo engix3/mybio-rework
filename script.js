@@ -45,9 +45,6 @@ overlay.addEventListener('click', async () => {
         if (card && card.vanillaTilt) {
             card.vanillaTilt.destroy(); 
         }
-
-        // 2. МЫ УДАЛИЛИ ВЕСЬ КОД, СВЯЗАННЫЙ С deviceorientation и requestAnimationFrame
-        // Карточка теперь будет просто статичной картинкой на фоне видео.
     }
     // ----------------------------
 
@@ -86,7 +83,7 @@ function initSpotlight() {
     const card = document.querySelector('.glass-card');
     if(!card) return;
     card.addEventListener('mousemove', (e) => {
-        if(isMobile) return; // Отключаем свет на мобилках для производительности
+        if(isMobile) return; 
         const rect = card.getBoundingClientRect();
         card.style.setProperty('--x', `${e.clientX - rect.left}px`);
         card.style.setProperty('--y', `${e.clientY - rect.top}px`);
@@ -119,11 +116,12 @@ function initTechStats() {
     }, 2000);
 }
 
-// === 2. LAST.FM (FINAL FIX: AUTO-UPDATE) ===
+// === 2. LAST.FM (FIXED: ANTI-FLICKER + ITUNES) ===
 
-// 1. Эти переменные ОБЯЗАТЕЛЬНО должны быть снаружи функции
+// 1. ПЕРЕМЕННЫЕ СОСТОЯНИЯ
 let lastSongName = "";
 let lastIsPlaying = null; 
+let playingCounter = 0; // <--- НОВОЕ: Счетчик для защиты от багов
 
 // 2. Функция поиска красивых обложек (iTunes)
 async function findBestArt(artist, track, lastFmImage) {
@@ -142,7 +140,6 @@ async function findBestArt(artist, track, lastFmImage) {
 async function updateLastFM() {
     if(!LASTFM_USERNAME || !LASTFM_API_KEY) return;
     
-    // Элементы DOM
     const songTitleEl = document.getElementById('fm-song-title');
     const artistEl = document.getElementById('fm-artist');
     const artEl = document.getElementById('fm-art');
@@ -167,19 +164,39 @@ async function updateLastFM() {
         const currentArtist = track.artist['#text'];
         const trackUrl = track.url;
         
-        // Статус: true если играет сейчас, false если на паузе
-        const isNowPlaying = (track['@attr'] && track['@attr'].nowplaying === "true") ? true : false;
+        // --- ЗАЩИТА ОТ МЕРЦАНИЯ (ANTI-FLICKER) ---
+        const rawIsPlaying = (track['@attr'] && track['@attr'].nowplaying === "true") ? true : false;
+        let finalIsPlaying = rawIsPlaying;
+
+        if (rawIsPlaying) {
+            // Если Last.fm говорит "Играет" - верим сразу
+            playingCounter = 0;
+            finalIsPlaying = true;
+        } else {
+            // Если Last.fm говорит "Не играет", а у нас до этого играло...
+            if (lastIsPlaying === true) {
+                playingCounter++; 
+                // Первые 4 проверки (около 12 сек) игнорируем "паузу"
+                // Это спасает, если API на секунду отдал ошибку
+                if (playingCounter < 4) { 
+                    finalIsPlaying = true; 
+                } else {
+                    finalIsPlaying = false;
+                }
+            }
+        }
 
         // --- ЛОГИКА 1: ОБНОВЛЕНИЕ ПЕСНИ ---
         if (lastSongName !== currentSongName) {
-            console.log("LastFM: Song changed to", currentSongName); // Лог для проверки
+            console.log("LastFM: Song changed to", currentSongName);
             lastSongName = currentSongName;
             
-            // Скрываем старое
+            // Сбрасываем буфер при смене трека, чтобы новая песня сразу определилась верно
+            playingCounter = 0;
+
             infoContainer.style.opacity = '0';
             artEl.style.opacity = '0';
 
-            // Получаем картинку LastFM
             let rawLastFmArt = "";
             if(track.image && track.image.length > 3 && track.image[3]['#text']) rawLastFmArt = track.image[3]['#text'];
             else if (track.image && track.image.length > 2 && track.image[2]['#text']) rawLastFmArt = track.image[2]['#text'];
@@ -187,10 +204,8 @@ async function updateLastFM() {
             const isDefault = rawLastFmArt.includes("2a96cbd8b46e442fc41c2b86b821562f") || rawLastFmArt === "";
             const artCandidate = isDefault ? null : rawLastFmArt;
 
-            // Ищем лучшую обложку
             const finalArtUrl = await findBestArt(currentArtist, currentSongName, artCandidate);
 
-            // Показываем новое
             setTimeout(() => {
                 songTitleEl.textContent = currentSongName;
                 artistEl.textContent = currentArtist;
@@ -207,18 +222,17 @@ async function updateLastFM() {
             }, 300);
         }
 
-        // --- ЛОГИКА 2: ОБНОВЛЕНИЕ СТАТУСА (ИГРАЕТ / НЕ ИГРАЕТ) ---
-        // Проверяем отдельно! Даже если песня та же, статус может смениться.
-        if (lastIsPlaying !== isNowPlaying) {
-            console.log("LastFM: Status changed to", isNowPlaying ? "Playing" : "Paused"); // Лог
-            lastIsPlaying = isNowPlaying;
+        // --- ЛОГИКА 2: ОБНОВЛЕНИЕ СТАТУСА ---
+        if (lastIsPlaying !== finalIsPlaying) {
+            console.log("LastFM: Status changed to", finalIsPlaying ? "Playing" : "Paused");
+            lastIsPlaying = finalIsPlaying;
 
-            if (isNowPlaying) {
+            if (finalIsPlaying) {
                 statusEl.textContent = "LISTENING NOW";
-                statusEl.className = "text-[9px] font-bold text-green-500 uppercase tracking-wider mb-0.5 animate-pulse smooth-all";
+                statusEl.className = "text-[10px] font-bold text-green-500 uppercase tracking-wider mb-0.5 animate-pulse smooth-all";
             } else {
                 statusEl.textContent = "LAST TRACK";
-                statusEl.className = "text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5 smooth-all";
+                statusEl.className = "text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5 smooth-all";
             }
         }
 
@@ -227,12 +241,9 @@ async function updateLastFM() {
     }
 }
 
-// 4. ЗАПУСК ЦИКЛА ОБНОВЛЕНИЯ (Без этого ничего меняться не будет!)
-// Запускаем первый раз сразу
+// 4. ЗАПУСК
 updateLastFM();
-// И потом каждые 3 секунды
 setInterval(updateLastFM, 3000);
-
 
 // === 3. DISCORD (ULTRA SMOOTH) ===
 let discordTimer = null;
