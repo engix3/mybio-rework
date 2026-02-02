@@ -1,5 +1,5 @@
 // ==========================================
-// SCRIPT.JS - ULTRA SMOOTH EDITION
+// SCRIPT.JS - GYRO FIX & REBOOT UPDATE
 // ==========================================
 
 const DISCORD_ID = "1257675618175422576"; 
@@ -16,13 +16,18 @@ const videoBg = document.getElementById('video-bg');
 
 // === VARIABLES ===
 let entered = false;
-let currentTiltX = 0, currentTiltY = 0, targetTiltX = 0, targetTiltY = 0;
+
+// Physics Vars
+let currentTiltX = 0, currentTiltY = 0;
+let targetTiltX = 0, targetTiltY = 0;
+let initialGamma = 0, initialBeta = 0; 
+let isMobile = false;
 
 // Init Services
 connectLanyard();
 
 // === 1. SYSTEM ENTRY ===
-overlay.addEventListener('click', () => {
+overlay.addEventListener('click', async () => {
     if (entered) return;
     entered = true;
 
@@ -31,24 +36,33 @@ overlay.addEventListener('click', () => {
         enterSound.play().catch(() => {});
     }
 
-    // Mobile Physics
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+    // --- MOBILE PHYSICS SETUP ---
+    isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+    
     if (isMobile) {
+        // Удаляем библиотеку vanilla-tilt, чтобы не мешала
         const card = document.querySelector('.glass-card');
         if (card && card.vanillaTilt) card.vanillaTilt.destroy();
-        
+
+        // Запрос прав для iOS 13+
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-            DeviceOrientationEvent.requestPermission().then(r => {
-                if (r === 'granted') {
+            try {
+                const permissionState = await DeviceOrientationEvent.requestPermission();
+                if (permissionState === 'granted') {
                     window.addEventListener('deviceorientation', handleMobileTilt);
-                    requestAnimationFrame(updateMobilePhysics);
                 }
-            });
+            } catch (error) {
+                console.error(error);
+            }
         } else {
+            // Android и старые iOS
             window.addEventListener('deviceorientation', handleMobileTilt);
-            requestAnimationFrame(updateMobilePhysics);
         }
+        
+        // Запускаем цикл анимации физики
+        requestAnimationFrame(updateMobilePhysics);
     }
+    // ----------------------------
 
     overlay.style.opacity = '0';
     
@@ -85,6 +99,7 @@ function initSpotlight() {
     const card = document.querySelector('.glass-card');
     if(!card) return;
     card.addEventListener('mousemove', (e) => {
+        if(isMobile) return; // Отключаем свет на мобилках для производительности
         const rect = card.getBoundingClientRect();
         card.style.setProperty('--x', `${e.clientX - rect.left}px`);
         card.style.setProperty('--y', `${e.clientY - rect.top}px`);
@@ -196,10 +211,6 @@ let discordTimer = null;
 let currentActivityStart = null;
 let activityStateStr = "";
 
-// State memory for smooth transitions
-let lastLargeImage = "";
-let lastTitleHTML = "";
-
 const statusColors = {
     online: "#23a559",
     idle: "#f0b232",
@@ -220,25 +231,18 @@ function connectLanyard() {
     setInterval(() => { if(ws.readyState === 1) ws.send(JSON.stringify({ op: 3 })); }, 30000);
 }
 
-// Хелпер для плавной смены контента
 function animateChange(element, newValue, type = 'text') {
-    // Если контент не изменился, ничего не делаем (чтобы таймеры не мерцали)
     if(type === 'image' && element.src === newValue) return;
     if(type === 'html' && element.innerHTML === newValue) return;
     if(type === 'text' && element.textContent === newValue) return;
 
-    // Плавное скрытие
     element.style.opacity = '0';
-    
     setTimeout(() => {
-        // Смена контента
         if(type === 'image') element.src = newValue;
         else if(type === 'html') element.innerHTML = newValue;
         else element.textContent = newValue;
-        
-        // Плавное появление
         element.style.opacity = '1';
-    }, 200); // 200ms задержка
+    }, 200);
 }
 
 function updateStatus(data) {
@@ -256,7 +260,6 @@ function updateStatus(data) {
     const userAvatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=512` : `https://cdn.discordapp.com/embed/avatars/0.png`;
     const statusColor = statusColors[data.discord_status] || statusColors.offline;
     
-    // Main Avatar
     if(mainAvatar) {
         if(mainAvatar.src !== userAvatarUrl) { 
             mainAvatar.src = userAvatarUrl; 
@@ -273,7 +276,6 @@ function updateStatus(data) {
     currentActivityStart = null;
     activityStateStr = "";
 
-    // === PREPARE NEW VALUES ===
     let newTitleHTML = "";
     let newLargeImage = "";
     let isSquareImage = false;
@@ -281,7 +283,6 @@ function updateStatus(data) {
     let dotContent = "";
     let dotClass = "";
     
-    // --- 1. Spotify ---
     if(data.listening_to_spotify) {
         newTitleHTML = '<span class="text-green-400 font-bold">Spotify</span>';
         activityStateStr = `${data.spotify.song} - ${data.spotify.artist}`;
@@ -289,19 +290,16 @@ function updateStatus(data) {
         isSquareImage = true;
         showDot = false; 
     } 
-    // --- 2. Game / App ---
     else if (data.activities && data.activities.length > 0) {
         const game = data.activities.find(a => a.type === 0) || data.activities[0];
         newTitleHTML = `Playing <span class="text-white font-bold truncate">${game.name}</span>`;
         
-        // Large Image Calc
         let largeIcon = game.assets?.large_image;
         if(largeIcon?.startsWith('mp:')) largeIcon = largeIcon.replace('mp:', 'https://media.discordapp.net/');
         else if(largeIcon) largeIcon = `https://cdn.discordapp.com/app-assets/${game.application_id}/${largeIcon}.png`;
         newLargeImage = largeIcon || userAvatarUrl;
         isSquareImage = !!largeIcon;
 
-        // Small Image Calc
         if(game.assets?.small_image) {
             let smallIcon = game.assets.small_image;
             if(smallIcon.startsWith('mp:')) smallIcon = smallIcon.replace('mp:', 'https://media.discordapp.net/');
@@ -313,19 +311,18 @@ function updateStatus(data) {
         } else {
             showDot = true;
             dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300";
-            dotContent = ""; // Just color
+            dotContent = "";
         }
 
         activityStateStr = game.details || game.state || "In Game";
 
         if(game.timestamps && game.timestamps.start) {
             currentActivityStart = game.timestamps.start;
-            updateGameString(); // Trigger once immediately
+            updateGameString(); 
             discordTimer = setInterval(updateGameString, 1000);
         }
 
     } 
-    // --- 3. Default ---
     else {
         newTitleHTML = data.discord_status.charAt(0).toUpperCase() + data.discord_status.slice(1);
         activityStateStr = "Chilling";
@@ -337,25 +334,16 @@ function updateStatus(data) {
         dotContent = "";
     }
 
-    // === APPLY UPDATES WITH ANIMATION ===
-    
-    // 1. Title (Header)
-    // Используем HTML так как там могут быть цветные спаны
     animateChange(statusTextEl, newTitleHTML, 'html');
 
-    // 2. Large Image
-    // Сначала определяем нужный класс (форма)
-    // Поставил duration-500, чтобы морфинг был заметнее и мягче
     const avatarClass = isSquareImage 
         ? "w-10 h-10 object-cover rounded-md transition-all duration-500 ease-in-out" 
         : "w-10 h-10 object-cover rounded-full transition-all duration-500 ease-in-out";
 
-    // Применяем класс СРАЗУ (форма начинает меняться на глазах)
     if (cardAvatar.className !== avatarClass) {
         cardAvatar.className = avatarClass;
     }
 
-    // А смену самой картинки (src) делаем через фейд, как и было
     if(cardAvatar.src !== newLargeImage) {
         cardAvatar.style.opacity = '0';
         setTimeout(() => {
@@ -364,18 +352,14 @@ function updateStatus(data) {
         }, 200);
     }
 
-    // 3. Subtext (Details)
-    // Если таймера нет, то обновляем текст плавно. Если таймер есть, updateGameString его обновит.
     if(!currentActivityStart) {
         animateChange(subTextEl, activityStateStr, 'text');
     }
 
-    // 4. Dot Status
     if(showDot) {
         statusDot.style.display = 'flex';
-        statusDot.className = dotClass; // Применит размеры
+        statusDot.className = dotClass; 
         
-        // Вставка контента (картинки или пустоты)
         if(dotContent) {
             statusDot.innerHTML = dotContent;
             statusDot.style.backgroundColor = 'transparent';
@@ -402,7 +386,6 @@ function updateGameString() {
         timeStr = `${hours>0?hours+':':''}${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')} elapsed`;
     }
 
-    // Таймер обновляется каждую секунду, здесь анимация не нужна (она будет мешать чтению)
     if(activityStateStr) {
         el.innerHTML = `${activityStateStr} &bull; ${timeStr}`;
     } else {
@@ -440,22 +423,46 @@ function setGreeting() {
     const el = document.getElementById('time-greeting');
     if(el) el.textContent = h<6?"You should be sleeping. 😴":h<12?"Good morning. 🌅":h<18?"Good afternoon. ☀️":"Good evening. 🌙";
 }
+
+// === GYROSCOPE FIX (REWRITTEN) ===
+// Этот код теперь использует "точку отсчета" (initial)
+// чтобы телефон всегда был в 0, когда ты зашел, 
+// а наклон считался от этого положения.
+
 function handleMobileTilt(e) {
     if (!entered) return;
-    if (initialBeta === null) { initialBeta = e.beta; initialGamma = e.gamma; }
-    let tiltX = (e.gamma || 0) - (initialGamma || 0);
-    let tiltY = (e.beta || 0) - (initialBeta || 0);
-    targetTiltX = Math.max(-20, Math.min(20, tiltX));
-    targetTiltY = Math.max(-20, Math.min(20, tiltY));
+    
+    // Если это первый ивент - запоминаем положение
+    if (initialGamma === 0 && initialBeta === 0) {
+        initialGamma = e.gamma || 0;
+        initialBeta = e.beta || 0;
+    }
+
+    // Считаем разницу
+    let tiltX = (e.gamma || 0) - initialGamma;
+    let tiltY = (e.beta || 0) - initialBeta;
+
+    // Ограничиваем углы (clamp), чтобы карточка не переворачивалась
+    const limit = 25; // Максимальный угол наклона
+    targetTiltX = Math.max(-limit, Math.min(limit, tiltX));
+    targetTiltY = Math.max(-limit, Math.min(limit, tiltY));
 }
+
 function updateMobilePhysics() {
     const card = document.querySelector('.glass-card');
     if (!entered || !card) return;
+    
+    // Плавное приближение (Lerp) для мягкости
     currentTiltX += (targetTiltX - currentTiltX) * 0.1;
     currentTiltY += (targetTiltY - currentTiltY) * 0.1;
+
+    // Применяем
     card.style.transform = `perspective(1000px) rotateY(${currentTiltX}deg) rotateX(${-currentTiltY}deg)`;
+    
     requestAnimationFrame(updateMobilePhysics);
 }
+
+// === COPY & CONTEXT ===
 function initTooltips() {
     const cursorTooltip = document.getElementById('link-cursor-tooltip');
     const tooltipText = document.getElementById('tooltip-text');
@@ -497,16 +504,65 @@ let linkToCopy = null;
 function handleCopyAction() {
     const url = linkToCopy || window.location.href;
     navigator.clipboard.writeText(url).then(() => {
-        iziToast.show({ theme: 'dark', icon: 'fa-solid fa-link', title: 'Link', message: 'Copied', position: 'topCenter', progressBarColor: '#00ff88', timeout: 2000 });
+        iziToast.show({ theme: 'dark', icon: 'fa-solid fa-link', title: 'Link', message: 'Copied', position: 'topCenter', progressBarColor: '#00ff88' });
     });
 }
 function copyDiscordNick() {
     navigator.clipboard.writeText("engi").then(() => {
-        iziToast.show({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2', timeout: 2000 });
+        iziToast.show({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2' });
     });
 }
-function triggerReboot() { location.reload(); }
-let initialBeta = null, initialGamma = null;
+function copyLastFM() {
+    const song = document.getElementById('fm-song-title').textContent;
+    const artist = document.getElementById('fm-artist').textContent;
+    if (!song || song === "Searching..." || song === "No Data") return;
+    navigator.clipboard.writeText(`${artist} - ${song}`).then(() => {
+        iziToast.show({ theme: 'dark', icon: 'fa-solid fa-music', title: 'Last.fm', message: 'Track name copied', position: 'topCenter', progressBarColor: '#b90000', timeout: 2000 });
+    });
+}
+
+// === REBOOT SCREEN (NEW ANIMATION) ===
+function triggerReboot() {
+    // 1. Hide Context Menu
+    if(contextMenu) contextMenu.style.display = 'none';
+
+    // 2. Hide Main UI
+    mainContainer.classList.add('ui-hidden');
+    techStats.classList.add('ui-hidden');
+
+    // 3. Show Reboot Screen
+    const screen = document.getElementById('reboot-screen');
+    const logs = document.getElementById('reboot-logs');
+    screen.classList.remove('hidden');
+    screen.style.display = 'flex'; // Force display
+
+    // 4. Logs Animation
+    const lines = [
+        "SYSTEM_HALT: CRITICAL_PROCESS_DIED",
+        "Collecting error info...",
+        "Dumping physical memory to disk: 100%",
+        "Clearing cache...",
+        "Contacting admin...",
+        "Initiating system restart..."
+    ];
+
+    let delay = 0;
+    lines.forEach((line, i) => {
+        setTimeout(() => {
+            const p = document.createElement('div');
+            p.textContent = `> ${line}`;
+            logs.appendChild(p);
+            window.scrollTo(0, document.body.scrollHeight);
+        }, delay);
+        // Случайная задержка между строками для реализма
+        delay += 300 + Math.random() * 400;
+    });
+
+    // 5. Reload Page
+    setTimeout(() => {
+        location.reload();
+    }, delay + 500);
+}
 
 document.addEventListener('keydown', (e) => {
     if(e.code === 'Insert') {
@@ -524,25 +580,3 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
-
-// === COPY LAST.FM TRACK ===
-function copyLastFM() {
-    const song = document.getElementById('fm-song-title').textContent;
-    const artist = document.getElementById('fm-artist').textContent;
-
-    if (!song || song === "Searching..." || song === "No Data") return;
-
-    const fullTrackName = `${artist} - ${song}`;
-
-    navigator.clipboard.writeText(fullTrackName).then(() => {
-        iziToast.show({
-            theme: 'dark',
-            icon: 'fa-solid fa-music',
-            title: 'Last.fm',
-            message: 'Track name copied',
-            position: 'topCenter',
-            progressBarColor: '#b90000', // Красный цвет Last.fm
-            timeout: 2000
-        });
-    });
-}
