@@ -257,7 +257,17 @@ body .iziToast-wrapper .iziToast {
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8) !important;
     border-radius: 14px !important;
+    overflow: hidden !important; /* Чтобы полоска не вылезала за углы */
 }
+
+/* Исправление полоски прогресса */
+body .iziToast-wrapper .iziToast .iziToast-progressbar {
+    z-index: 9999 !important; /* Полоска всегда сверху */
+    bottom: 0 !important;
+    height: 3px !important;
+    border-radius: 0 !important;
+}
+
 body .iziToast-wrapper .iziToast-body strong { font-family: 'Outfit', sans-serif !important; }
 body .iziToast-wrapper .iziToast-body p { font-family: 'Outfit', sans-serif !important; opacity: 0.7; }
 

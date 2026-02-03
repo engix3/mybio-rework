@@ -209,8 +209,11 @@ async function updateLastFM() {
             setTimeout(() => {
                 songTitleEl.textContent = currentSongName;
                 artistEl.textContent = currentArtist;
-                songLinkEl.href = trackUrl;
-                if(linkEl) linkEl.href = trackUrl;
+                // Генерируем ссылку на поиск в ВК
+                const vkSearchUrl = `https://vk.com/audio?q=${encodeURIComponent(currentArtist + " " + currentSongName)}`;
+                
+                songLinkEl.href = vkSearchUrl;
+                if(linkEl) linkEl.href = vkSearchUrl; // Обложка тоже ведет на ВК
 
                 if (finalArtUrl) {
                     artEl.src = finalArtUrl;
@@ -231,7 +234,7 @@ async function updateLastFM() {
                 statusEl.textContent = "LISTENING NOW";
                 statusEl.className = "text-[10px] font-bold text-green-500 uppercase tracking-wider mb-0.5 animate-pulse smooth-all";
             } else {
-                statusEl.textContent = "LAST TRACK";
+                statusEl.textContent = "LAST LISTENED TRACK";
                 statusEl.className = "text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-0.5 smooth-all";
             }
         }
@@ -509,7 +512,7 @@ function handleCopyAction() {
     });
 }
 function copyDiscordNick() {
-    navigator.clipboard.writeText("engi").then(() => {
+    navigator.clipboard.writeText("engi4").then(() => {
         iziToast.show({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2', timeout: 2000 });
     });
 }
