@@ -95,7 +95,7 @@ const LASTFM_API_KEY = "KEY";     // Получить бесплатно: https:
 *   **FontAwesome** — иконки.
 *   **Lanyard API** — магия Discord статуса.
 *   **iziToast** — уведомления.
-*   **Gemini 3 Pro** — рефакторинг кода и логика API.
+*   **Kilo Code (Gemini 3 Pro, Qwen3 Coder Plus)** — рефакторинг кода и логика API.
 
 ---
 
