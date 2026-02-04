@@ -214,53 +214,6 @@ body.intro-finished .fade-in-stagger {
     color: #00ff00 !important;
 }
 
-/* Курсор печати */
-.cursor {
-    display: inline-block;
-    width: 2px;
-    background-color: #00ff00;
-    animation: blink 1s infinite;
-}
-
-/* Glow эффект для аватара - онлайн */
-.avatar-glow.online {
-    box-shadow: 0 0 15px rgba(35, 165, 89, 0.5);
-    transition: box-shadow 0.3s ease;
-}
-
-.avatar-glow.online:hover {
-    box-shadow: 0 0 25px rgba(35, 165, 89, 0.8);
-}
-
-/* Glow эффект для аватара - бездействие */
-.avatar-glow.idle {
-    box-shadow: 0 0 15px rgba(240, 178, 50, 0.5);
-    transition: box-shadow 0.3s ease;
-}
-
-.avatar-glow.idle:hover {
-    box-shadow: 0 0 25px rgba(240, 178, 50, 0.8);
-}
-
-/* Glow эффект для аватара - не беспокоить */
-.avatar-glow.dnd {
-    box-shadow: 0 0 15px rgba(242, 63, 67, 0.5);
-    transition: box-shadow 0.3s ease;
-}
-
-.avatar-glow.dnd:hover {
-    box-shadow: 0 0 25px rgba(242, 63, 67, 0.8);
-}
-
-/* Glow эффект для аватара - оффлайн */
-.avatar-glow.offline {
-    box-shadow: 0 0 15px rgba(128, 132, 142, 0.5);
-    transition: box-shadow 0.3s ease;
-}
-
-.avatar-glow.offline:hover {
-    box-shadow: 0 0 25px rgba(128, 132, 142, 0.8);
-}
 @keyframes blink { 50% { opacity: 0; } }
 
 /* Блюр при наведении */
@@ -364,12 +317,100 @@ body .iziToast-wrapper .iziToast-body p { font-family: 'Outfit', sans-serif !imp
 }
 
 /* Плавное изменение цвета контура аватара */
-.border-transition {
-    transition: border-color 0.5s ease, box-shadow 0.3s ease;
+@property --border-color-1 {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: #80848e;
 }
 
-/* Класс для плавного изменения цвета границы через CSS переменные */
-.border-transition-colors {
-    border-color: var(--border-color, #333) !important;
-    transition: border-color 0.5s ease, box-shadow 0.3s ease;
+@property --border-color-2 {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: #80848e;
+}
+
+@property --border-color-3 {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: #80848e;
+}
+
+@property --border-color-4 {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: #80848e;
+}
+
+@property --glow-color {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: #80848e;
+}
+
+.avatar-container {
+    position: relative;
+    width: 136px;
+    height: 136px;
+    border-radius: 50%;
+    background: linear-gradient(
+        135deg,
+        var(--border-color-1),
+        var(--border-color-2),
+        var(--border-color-3),
+        var(--border-color-4)
+    );
+    background-size: 400% 400%;
+    padding: 4px;
+    animation: gradient-shift 8s ease infinite;
+    transition: --border-color-1 0.8s ease, --border-color-2 0.8s ease, --border-color-3 0.8s ease, --border-color-4 0.8s ease, --glow-color 0.8s ease;
+    box-shadow: 0 0 15px var(--glow-color);
+}
+
+.avatar-container.online {
+    --border-color-1: #23a559;
+    --border-color-2: #00d4aa;
+    --border-color-3: #23a559;
+    --border-color-4: #00b365;
+    --glow-color: rgba(35, 165, 89, 0.6);
+}
+
+.avatar-container.idle {
+    --border-color-1: #f0b232;
+    --border-color-2: #ffd54f;
+    --border-color-3: #f0b232;
+    --border-color-4: #ffca28;
+    --glow-color: rgba(240, 178, 50, 0.6);
+}
+
+.avatar-container.dnd {
+    --border-color-1: #f23f43;
+    --border-color-2: #ff6b6b;
+    --border-color-3: #f23f43;
+    --border-color-4: #ee5a5a;
+    --glow-color: rgba(242, 63, 67, 0.6);
+}
+
+.avatar-container.offline {
+    --border-color-1: #80848e;
+    --border-color-2: #9ca3af;
+    --border-color-3: #80848e;
+    --border-color-4: #6b7280;
+    --glow-color: rgba(128, 132, 142, 0.5);
+}
+
+.avatar-container .avatar {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid #1a1a1a;
+    position: relative;
+    z-index: 1;
+    background: #1a1a1a;
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }

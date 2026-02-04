@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - System Error</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
+    
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Quicksand:wght@300;500;700;900&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="text-white min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden relative">
+
+    <!-- Overlay -->
+    <div id="overlay" class="opacity-0 pointer-events-none">
+        <div class="relative w-full h-full flex flex-col items-center justify-center">
+            <div class="scanline"></div>
+            <div class="mb-6 animate-pulse text-neutral-400">
+                <i class="fa-solid fa-fingerprint text-6xl"></i>
+            </div>
+            <h2 class="text-xl font-bold tracking-widest uppercase mono-font text-white mb-2">System Security</h2>
+            <p class="text-sm text-neutral-500 mono-font typewriter-static">Verifying biometric data...</p>
+            <p class="mt-8 text-xs text-neutral-600 animate-bounce">Click to enter</p>
+        </div>
+    </div>
+
+    <!-- Background -->
+    <div id="noise"></div>
+    <div id="vignette"></div>
+    <!-- 1. Статичная картинка (лежит в самом низу, видна сразу) -->
+    <img id="bg-poster" src="image/bg-poster.png" alt="Background">
+
+    <!-- Main 404 Content -->
+    <div id="main-container" class="relative z-10 w-full max-w-md p-4 flex flex-grow flex items-center justify-center">
+        <!-- glass-card -->
+        <div class="glass-card rounded-2xl p-8 flex flex-col items-center text-center relative overflow-hidden w-full" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+            
+            <!-- Spotlight Layer -->
+            <div id="main-spotlight" class="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 z-0"
+                style="background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.15), transparent 40%);">
+            </div>
+
+            <!-- Content Wrapper -->
+            <div class="relative z-10 w-full flex flex-col items-center">
+
+                <!-- Error Code -->
+                <div class="relative mb-6 fade-in-stagger">
+                   <i class="fa-solid fa-bug text-6xl text-red-500"></i>
+                </div>
+
+                <!-- Error Title -->
+                <h1 class="text-6xl font-black mb-2 tracking-tighter drop-shadow-2xl fade-in-stagger delay-100">
+                    <span class="neon-pulse font-[Quicksand]">404</span>
+                </h1>
+                
+                <!-- Error Description -->
+                <div class="h-6 mb-1 flex items-center justify-center space-x-1 fade-in-stagger delay-100">
+                    <span class="text-neutral-400 font-medium text-lg mono-font" id="error-message">SYSTEM ERROR</span>
+                </div>
+                
+                <!-- Description -->
+                <div class="text-[10px] text-neutral-500 mb-6 mono-font fade-in-stagger delay-100 text-center">
+                    Looks like you've wandered into uncharted territory.<br>Our systems couldn't locate the requested resource.
+                </div>
+
+                <!-- Return Button -->
+                <div class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex items-center justify-center text-center fade-in-stagger delay-200 hover:bg-[#151515] transition cursor-pointer group shadow-lg relative active:scale-95 duration-200" onclick="goHome()">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center rounded-xl z-20">
+                        <span class="text-xs font-bold text-white tracking-widest uppercase"><i class="fa-solid fa-home mr-2"></i>Return Home</span>
+                    </div>
+                    
+                    <div class="z-10 text-sm font-bold text-white">
+                        Return to Safety
+                    </div>
+                </div>
+
+            </div> <!-- End Content Wrapper -->
+
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="custom-context-menu" class="fixed hidden z-[99999] min-w-[150px] glass-menu rounded-lg overflow-hidden border border-white/10 p-1 flex-col gap-1">
+        <button class="menu-item" onclick="handleCopyAction()">
+            <i class="fa-solid fa-link text-xs w-5 text-center"></i> 
+            <span id="context-copy-text">Copy Link</span>
+        </button>
+        <button class="menu-item" onclick="window.open('https://github.com/engix3/mybio-rework', '_blank')">
+            <i class="fa-brands fa-github text-xs w-5 text-center"></i> Source Code
+        </button>
+        <div class="h-[1px] bg-white/10 w-full my-0.5"></div>
+        <button class="menu-item text-red-400 hover:text-red-300" onclick="triggerReboot()">
+            <i class="fa-solid fa-rotate-right text-xs w-5 text-center"></i> Restart System
+        </button>
+    </div>
+
+    <!-- Reboot Screen -->
+    <div id="reboot-screen" class="fixed inset-0 bg-black z-[100000] hidden flex-col items-start justify-start p-6 md:p-10 mono-font text-green-500 text-xs md:text-sm select-none overflow-hidden">
+        <div id="reboot-logs" class="flex flex-col gap-1 w-full max-w-2xl"></div>
+        <div class="mt-1 animate-pulse text-green-400">_</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+    <script>
+        // Initialize the page with similar functionality to the main page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initially hide the main container for animation
+            const mainContainer = document.getElementById('main-container');
+            mainContainer.style.opacity = '0';
+            mainContainer.style.transform = 'translateY(20px)';
+            
+            // Add intro finished class to enable animations
+            document.body.classList.add('intro-finished');
+            
+            // Apply fade-in animation to the main container
+            setTimeout(() => {
+                mainContainer.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                mainContainer.style.opacity = '1';
+                mainContainer.style.transform = 'translateY(0)';
+            }, 100);
+            
+            // Initialize spotlight effect
+            initSpotlight();
+            
+            // Initialize tooltips
+            initTooltips();
+            
+            // Initialize context menu
+            initContextMenu();
+        });
+
+        // Function to return to home page
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        // Reuse functions from main site
+        function initSpotlight() {
+            const card = document.querySelector('.glass-card');
+            if(!card) return;
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                card.style.setProperty('--x', `${e.clientX - rect.left}px`);
+                card.style.setProperty('--y', `${e.clientY - rect.top}px`);
+            });
+        }
+
+        function initTooltips() {
+            // Placeholder for tooltip initialization if needed
+        }
+
+        // Context Menu Functions
+        function initContextMenu() {
+            const contextMenu = document.getElementById('custom-context-menu');
+            
+            document.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                
+                // Position the context menu
+                contextMenu.style.display = 'flex';
+                contextMenu.style.left = `${e.pageX}px`;
+                contextMenu.style.top = `${e.pageY}px`;
+                
+                // Adjust if menu goes off screen
+                const rect = contextMenu.getBoundingClientRect();
+                if(rect.right > window.innerWidth) {
+                    contextMenu.style.left = `${window.innerWidth - rect.width - 10}px`;
+                }
+                if(rect.bottom > window.innerHeight) {
+                    contextMenu.style.top = `${window.innerHeight - rect.height - 10}px`;
+                }
+            });
+            
+            document.addEventListener('click', () => {
+                contextMenu.style.display = 'none';
+            });
+        }
+
+        function handleCopyAction() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                iziToast.show({
+                    theme: 'dark',
+                    icon: 'fa-solid fa-link',
+                    title: 'Link',
+                    message: 'Copied',
+                    position: 'topCenter',
+                    progressBarColor: '#00ff88',
+                    timeout: 2000
+                });
+            });
+        }
+
+        function triggerReboot() {
+            // Hide Context Menu
+            document.getElementById('custom-context-menu').style.display = 'none';
+
+            // Show Reboot Screen
+            const screen = document.getElementById('reboot-screen');
+            const logs = document.getElementById('reboot-logs');
+            screen.classList.remove('hidden');
+            screen.style.display = 'flex';
+
+            // Logs Animation
+            const lines = [
+                "SYSTEM_HALT: CRITICAL_PROCESS_DIED",
+                "Collecting error info...",
+                "Dumping physical memory to disk: 100%",
+                "Clearing cache...",
+                "Contacting admin...",
+                "Initiating system restart..."
+            ];
+
+            let delay = 0;
+            lines.forEach((line, i) => {
+                setTimeout(() => {
+                    const p = document.createElement('div');
+                    p.textContent = `> ${line}`;
+                    logs.appendChild(p);
+                    window.scrollTo(0, document.body.scrollHeight);
+                }, delay);
+                delay += 300 + Math.random() * 400;
+            });
+
+            // Reload Page
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, delay + 500);
+        }
+    </script>
+</body>
+</html>

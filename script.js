@@ -307,12 +307,14 @@ function updateStatus(data) {
             mainAvatar.src = userAvatarUrl;
             mainAvatar.onload = () => mainAvatar.classList.remove('opacity-0');
         }
-        mainAvatar.style.setProperty('--border-color', statusColor);
         
-        // Удаляем старые классы glow и добавляем новые в зависимости от статуса
-        mainAvatar.classList.remove('online', 'idle', 'dnd', 'offline', 'avatar-glow');
-        const statusClass = data.discord_status;
-        mainAvatar.classList.add('avatar-glow', statusClass);
+        // Применяем класс статуса к контейнеру градиента
+        const avatarRing = document.getElementById('avatar-ring');
+        if(avatarRing) {
+            avatarRing.classList.remove('online', 'idle', 'dnd', 'offline');
+            const statusClass = data.discord_status;
+            avatarRing.classList.add(statusClass);
+        }
     }
     
     if(usernameEl) usernameEl.textContent = user.global_name || user.username;
