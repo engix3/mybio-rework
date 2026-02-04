@@ -133,6 +133,19 @@ body {
     transform: perspective(1000px);
 }
 
+/* Spotlight Layer */
+#main-spotlight {
+    /* Регулируйте силу свечения здесь: изменяйте значение alpha (последний параметр rgba) */
+    /* Для более сильного эффекта: rgba(255,255,255,0.3) */
+    /* Для более слабого эффекта: rgba(255,255,255,0.05) */
+    background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.15), transparent 40%);
+}
+
+/* Показываем spotlight при наведении на карточку */
+.glass-card:hover #main-spotlight {
+    opacity: 0.5;
+}
+
 /* Тултипы */
 .tooltip {
     opacity: 0;
@@ -192,8 +205,61 @@ body.intro-finished .fade-in-stagger {
 .cursor {
     display: inline-block;
     width: 2px;
-    background-color: white;
+    background-color: #00ff00;
     animation: blink 1s infinite;
+}
+
+/* Текст печатной машинки (терминальный стиль) */
+#typewriter {
+    color: #00ff00 !important;
+}
+
+/* Курсор печати */
+.cursor {
+    display: inline-block;
+    width: 2px;
+    background-color: #00ff00;
+    animation: blink 1s infinite;
+}
+
+/* Glow эффект для аватара - онлайн */
+.avatar-glow.online {
+    box-shadow: 0 0 15px rgba(35, 165, 89, 0.5);
+    transition: box-shadow 0.3s ease;
+}
+
+.avatar-glow.online:hover {
+    box-shadow: 0 0 25px rgba(35, 165, 89, 0.8);
+}
+
+/* Glow эффект для аватара - бездействие */
+.avatar-glow.idle {
+    box-shadow: 0 0 15px rgba(240, 178, 50, 0.5);
+    transition: box-shadow 0.3s ease;
+}
+
+.avatar-glow.idle:hover {
+    box-shadow: 0 0 25px rgba(240, 178, 50, 0.8);
+}
+
+/* Glow эффект для аватара - не беспокоить */
+.avatar-glow.dnd {
+    box-shadow: 0 0 15px rgba(242, 63, 67, 0.5);
+    transition: box-shadow 0.3s ease;
+}
+
+.avatar-glow.dnd:hover {
+    box-shadow: 0 0 25px rgba(242, 63, 67, 0.8);
+}
+
+/* Glow эффект для аватара - оффлайн */
+.avatar-glow.offline {
+    box-shadow: 0 0 15px rgba(128, 132, 142, 0.5);
+    transition: box-shadow 0.3s ease;
+}
+
+.avatar-glow.offline:hover {
+    box-shadow: 0 0 25px rgba(128, 132, 142, 0.8);
 }
 @keyframes blink { 50% { opacity: 0; } }
 
@@ -207,6 +273,23 @@ body.intro-finished .fade-in-stagger {
 
 /* Технический шрифт */
 .mono-font { font-family: 'JetBrains Mono', monospace; }
+
+/* Шрифт для русского текста (включая кириллицу) */
+.cyrillic-font {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.2; /* Увеличиваем высоту строки для учета выносных элементов */
+    overflow: visible; /* Обеспечиваем видимость выносных элементов */
+}
+
+/* Коррекция для элементов с треками */
+#fm-song-title,
+#fm-artist {
+    line-height: 1.2 !important;
+    overflow: hidden;
+    min-height: 1.2em; /* Обеспечиваем минимальную высоту для отображения выносных элементов */
+    text-overflow: ellipsis; /* Добавляем многоточие при переполнении */
+    white-space: nowrap; /* Запрещаем перенос строк */
+}
 
 /* Белый Пульсирующий Неон */
 .neon-pulse {
@@ -278,4 +361,15 @@ body .iziToast-wrapper .iziToast-body p { font-family: 'Outfit', sans-serif !imp
 }
 .stats-enter-anim {
     animation: statsSlideIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Плавное изменение цвета контура аватара */
+.border-transition {
+    transition: border-color 0.5s ease, box-shadow 0.3s ease;
+}
+
+/* Класс для плавного изменения цвета границы через CSS переменные */
+.border-transition-colors {
+    border-color: var(--border-color, #333) !important;
+    transition: border-color 0.5s ease, box-shadow 0.3s ease;
 }

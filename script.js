@@ -210,7 +210,7 @@ async function updateLastFM() {
                 songTitleEl.textContent = currentSongName;
                 artistEl.textContent = currentArtist;
                 // Генерируем ссылку на поиск в ВК
-                const vkSearchUrl = `https://vk.com/audio?q=${encodeURIComponent(currentArtist + " " + currentSongName)}`;
+                const vkSearchUrl = `https://vk.com/audio?q=${encodeURIComponent(currentSongName + " " + currentArtist)}`;
                 
                 songLinkEl.href = vkSearchUrl;
                 if(linkEl) linkEl.href = vkSearchUrl; // Обложка тоже ведет на ВК
@@ -303,11 +303,16 @@ function updateStatus(data) {
     const statusColor = statusColors[data.discord_status] || statusColors.offline;
     
     if(mainAvatar) {
-        if(mainAvatar.src !== userAvatarUrl) { 
-            mainAvatar.src = userAvatarUrl; 
+        if(mainAvatar.src !== userAvatarUrl) {
+            mainAvatar.src = userAvatarUrl;
             mainAvatar.onload = () => mainAvatar.classList.remove('opacity-0');
         }
-        mainAvatar.style.borderColor = statusColor;
+        mainAvatar.style.setProperty('--border-color', statusColor);
+        
+        // Удаляем старые классы glow и добавляем новые в зависимости от статуса
+        mainAvatar.classList.remove('online', 'idle', 'dnd', 'offline', 'avatar-glow');
+        const statusClass = data.discord_status;
+        mainAvatar.classList.add('avatar-glow', statusClass);
     }
     
     if(usernameEl) usernameEl.textContent = user.global_name || user.username;
@@ -463,7 +468,12 @@ function initTypewriter() {
 function setGreeting() {
     const h = new Date().getHours();
     const el = document.getElementById('time-greeting');
-    if(el) el.textContent = h<6?"You should be sleeping. 😴":h<12?"Good morning. 🌅":h<18?"Good afternoon. ☀️":"Good evening. 🌙";
+    if(el) {
+        if(h < 6) el.textContent = "System Alert: Humans detected in sleeping state. 😴";
+        else if(h < 12) el.textContent = "Initializing morning protocols... 🌅";
+        else if(h < 18) el.textContent = "System operating in daylight mode. ☀️";
+        else el.textContent = "Switching to night vision mode. 🌙";
+    }
 }
 
 // === COPY & CONTEXT ===
@@ -520,7 +530,7 @@ function copyLastFM() {
     const song = document.getElementById('fm-song-title').textContent;
     const artist = document.getElementById('fm-artist').textContent;
     if (!song || song === "Searching..." || song === "No Data") return;
-    navigator.clipboard.writeText(`${artist} - ${song}`).then(() => {
+    navigator.clipboard.writeText(`${song} - ${artist}`).then(() => {
         iziToast.show({ theme: 'dark', icon: 'fa-solid fa-music', title: 'Last.fm', message: 'Track name copied', position: 'topCenter', progressBarColor: '#b90000', timeout: 2000 });
     });
 }

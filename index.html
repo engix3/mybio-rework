@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Quicksand:wght@300;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Quicksand:wght@300;500;700;900&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="text-white min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden relative">
@@ -61,8 +61,8 @@
         <div class="glass-card rounded-2xl p-8 flex flex-col items-center text-center relative overflow-hidden w-full" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
             
             <!-- Spotlight Layer -->
-            <div id="main-spotlight" class="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-0" 
-                style="background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.1), transparent 40%);">
+            <div id="main-spotlight" class="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 z-0"
+                style="background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.15), transparent 40%);">
             </div>
 
             <!-- Content Wrapper -->
@@ -70,10 +70,10 @@
 
                 <!-- Avatar -->
                 <div class="relative mb-6 fade-in-stagger">
-                   <img id="discord-avatar" 
-                     src="" 
-                     alt="Profile" 
-                     class="relative w-32 h-32 rounded-full border-4 border-[#333] object-cover shadow-2xl transition-all duration-500 opacity-0 bg-neutral-900">
+                   <img id="discord-avatar"
+                     src=""
+                     alt="Profile"
+                     class="relative w-32 h-32 rounded-full border-4 border-[#333] object-cover shadow-2xl transition-all duration-500 opacity-0 bg-neutral-900 avatar-glow border-transition-colors">
                 </div>
 
                 <!-- Nickname -->
@@ -111,7 +111,7 @@
                 </div>
 
                 <!-- Last.fm Integration (Fixed Borders) -->
-                <div id="fm-container" class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-300 hover:bg-white/5 transition duration-500 overflow-hidden h-[74px]">
+                <div id="fm-container" class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-300 hover:bg-black/20 transition duration-500 overflow-hidden h-[74px]">
                     
                     <!-- Cover Art -->
                     <a id="fm-link" href="#" target="_blank" class="shrink-0 relative w-12 h-12 group/cover cursor-pointer rounded-md">
@@ -152,14 +152,14 @@
                         <!-- Row 2: Title + VK Icon -->
                         <div class="flex items-center w-full h-4 mt-0.5">
                             <a id="fm-song-link" href="#" target="_blank" class="flex items-center gap-1.5 min-w-0 max-w-full group/title">
-                                <span id="fm-song-title" class="truncate text-xs font-bold text-white group-hover/title:text-[#0077FF] transition leading-none">Searching...</span>
+                                <span id="fm-song-title" class="truncate text-xs font-bold text-white group-hover/title:text-[#0077FF] transition leading-none cyrillic-font">Searching...</span>
                                 <i class="fa-brands fa-vk text-[12px] text-[#0077FF] shrink-0 opacity-70 group-hover/title:opacity-100 transition"></i>
                             </a>
                         </div>
         
                         <!-- Row 3: Artist + Copy Btn -->
                         <div class="flex items-center justify-between w-full h-3">
-                            <div class="text-[10px] text-neutral-400 font-medium truncate leading-none pr-2" id="fm-artist">...</div>
+                            <div class="text-[10px] text-neutral-400 font-medium truncate leading-none pr-2 cyrillic-font" id="fm-artist">...</div>
                             
                             <button onclick="copyLastFM()" class="text-neutral-600 hover:text-white transition-colors cursor-pointer shrink-0" title="Copy Track Name">
                                 <i class="fa-regular fa-copy text-[10px]"></i>
