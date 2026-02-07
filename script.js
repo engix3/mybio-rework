@@ -358,9 +358,14 @@ function updateStatus(data) {
             dotClass = "absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-[#111] bg-[#111] flex items-center justify-center overflow-hidden transition-all duration-300";
             dotContent = `<img src="${smallIcon}" class="w-full h-full object-cover">`;
         } else {
-            showDot = true;
-            dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300";
-            dotContent = "";
+            // Fix: If there is a large image (Rich Presence) but no small image -> hide the dot
+            // If it's a normal avatar (no large image) -> show the status dot
+            showDot = !isSquareImage;
+            
+            if (showDot) {
+                dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300";
+                dotContent = "";
+            }
         }
 
         activityStateStr = game.details || game.state || "In Game";
