@@ -1,12 +1,7 @@
-// ==========================================
-// SCRIPT.JS - GYRO FIX & REBOOT UPDATE
-// ==========================================
+const DISCORD_ID = window.CONFIG.discord.user_id;
+const LASTFM_USERNAME = window.CONFIG.lastfm.username;
+const LASTFM_API_KEY = window.CONFIG.lastfm.api_key;
 
-const DISCORD_ID = "1257675618175422576"; 
-const LASTFM_USERNAME = "engi2";      
-const LASTFM_API_KEY = "d150e3e4d37438b5a18bb0f942f3275a";      
-
-// === DOM ELEMENTS ===
 const overlay = document.getElementById('overlay');
 const mainContainer = document.getElementById('main-container');
 const techStats = document.getElementById('tech-stats');
@@ -14,59 +9,53 @@ const bgMusic = document.getElementById('bg-music');
 const enterSound = document.getElementById('enter-sound');
 const videoBg = document.getElementById('video-bg');
 
-// === VARIABLES ===
 let entered = false;
-
-// Physics Vars
 let currentTiltX = 0, currentTiltY = 0;
 let targetTiltX = 0, targetTiltY = 0;
-let initialGamma = 0, initialBeta = 0; 
+let initialGamma = 0, initialBeta = 0;
 let isMobile = false;
 
-// Init Services
+// Initialize Services
+initConfig();
 connectLanyard();
 
-// === 1. SYSTEM ENTRY ===
+// --- SYSTEM ENTRY ---
 overlay.addEventListener('click', async () => {
     if (entered) return;
     entered = true;
 
-    if(enterSound) {
+    if (enterSound) {
         enterSound.volume = 0.4;
-        enterSound.play().catch(() => {});
+        enterSound.play().catch(() => { });
     }
 
-    // --- MOBILE PHYSICS SETUP (ИЗМЕНЕНО: ГИРОСКОП ОТКЛЮЧЕН) ---
     isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
-    
+
     if (isMobile) {
-        // 1. Отключаем библиотеку vanilla-tilt (эффект наклона), чтобы карточка была ровной
         const card = document.querySelector('.glass-card');
         if (card && card.vanillaTilt) {
-            card.vanillaTilt.destroy(); 
+            card.vanillaTilt.destroy();
         }
     }
-    // ----------------------------
 
     overlay.style.opacity = '0';
-    
+
     setTimeout(() => {
         overlay.style.display = 'none';
         mainContainer.classList.remove('hidden');
         techStats.classList.remove('hidden');
-        techStats.classList.add('stats-enter-anim'); 
-        
-        if(bgMusic) {
-             bgMusic.pause();
-             bgMusic.currentTime = 0;
+        techStats.classList.add('stats-enter-anim');
+
+        if (bgMusic) {
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
         }
-        
-        // Init Logic
-        try { initTypewriter(); } catch(e) {}
-        try { setGreeting(); } catch(e) {}
-        try { initTechStats(); } catch(e) {}
-        try { updateLastFM(); } catch(e) {}
-        try { initSpotlight(); } catch(e) {} 
+
+        try { initTypewriter(); } catch (e) { }
+        try { setGreeting(); } catch (e) { }
+        try { initTechStats(); } catch (e) { }
+        try { updateLastFM(); } catch (e) { }
+        try { initSpotlight(); } catch (e) { }
         initTooltips();
 
         setTimeout(() => {
@@ -78,24 +67,24 @@ overlay.addEventListener('click', async () => {
     }, 800);
 });
 
-// === SPOTLIGHT FIX ===
+// --- SPOTLIGHT ---
 function initSpotlight() {
     const card = document.querySelector('.glass-card');
-    if(!card) return;
+    if (!card) return;
     card.addEventListener('mousemove', (e) => {
-        if(isMobile) return; 
+        if (isMobile) return;
         const rect = card.getBoundingClientRect();
         card.style.setProperty('--x', `${e.clientX - rect.left}px`);
         card.style.setProperty('--y', `${e.clientY - rect.top}px`);
     });
 }
 
-// === TECH STATS ===
+// --- TECH STATS ---
 function initTechStats() {
     const ua = navigator.userAgent.toLowerCase();
-    const os = ua.includes("android")?"ANDROID":ua.includes("iphone")?"IOS":ua.includes("win")?"WINDOWS":ua.includes("mac")?"MACOS":"LINUX";
+    const os = ua.includes("android") ? "ANDROID" : ua.includes("iphone") ? "IOS" : ua.includes("win") ? "WINDOWS" : ua.includes("mac") ? "MACOS" : "LINUX";
     const platEl = document.querySelector('#platform-display span');
-    if(platEl) platEl.textContent = os;
+    if (platEl) platEl.textContent = os;
 
     const fpsEl = document.getElementById('fps-counter');
     let lastTime = performance.now(), frames = 0;
@@ -103,7 +92,7 @@ function initTechStats() {
         const now = performance.now();
         frames++;
         if (now - lastTime >= 1000) {
-            if(fpsEl) fpsEl.textContent = frames;
+            if (fpsEl) fpsEl.textContent = frames;
             frames = 0; lastTime = now;
         }
         requestAnimationFrame(loop);
@@ -112,18 +101,15 @@ function initTechStats() {
 
     const pingEl = document.getElementById('ping-counter');
     setInterval(() => {
-        if(pingEl) pingEl.textContent = Math.floor(Math.random() * (25 - 12 + 1) + 12);
+        if (pingEl) pingEl.textContent = Math.floor(Math.random() * (25 - 12 + 1) + 12);
     }, 2000);
 }
 
-// === 2. LAST.FM (FIXED: ANTI-FLICKER + ITUNES) ===
-
-// 1. ПЕРЕМЕННЫЕ СОСТОЯНИЯ
+// --- LAST.FM INTEGRATION ---
 let lastSongName = "";
-let lastIsPlaying = null; 
-let playingCounter = 0; // <--- НОВОЕ: Счетчик для защиты от багов
+let lastIsPlaying = null;
+let playingCounter = 0;
 
-// 2. Функция поиска красивых обложек (iTunes)
 async function findBestArt(artist, track, lastFmImage) {
     try {
         const query = `${artist} ${track}`;
@@ -132,14 +118,13 @@ async function findBestArt(artist, track, lastFmImage) {
         if (data.results && data.results.length > 0) {
             return data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
         }
-    } catch (e) {}
+    } catch (e) { }
     return lastFmImage || "";
 }
 
-// 3. Основная функция
 async function updateLastFM() {
-    if(!LASTFM_USERNAME || !LASTFM_API_KEY) return;
-    
+    if (!LASTFM_USERNAME || !LASTFM_API_KEY) return;
+
     const songTitleEl = document.getElementById('fm-song-title');
     const artistEl = document.getElementById('fm-artist');
     const artEl = document.getElementById('fm-art');
@@ -148,11 +133,10 @@ async function updateLastFM() {
     const songLinkEl = document.getElementById('fm-song-link');
     const infoContainer = document.getElementById('fm-info');
 
-    if(!songTitleEl) return;
+    if (!songTitleEl) return;
 
-    // URL с защитой от кэша (Date.now())
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${LASTFM_USERNAME}&api_key=${LASTFM_API_KEY}&format=json&limit=1&_=${Date.now()}`;
-    
+
     try {
         const response = await fetch(url);
         const data = await response.json();
@@ -162,45 +146,33 @@ async function updateLastFM() {
         const track = data.recenttracks.track[0];
         const currentSongName = track.name;
         const currentArtist = track.artist['#text'];
-        const trackUrl = track.url;
-        
-        // --- ЗАЩИТА ОТ МЕРЦАНИЯ (ANTI-FLICKER) ---
+
+        // Anti-flicker logic
         const rawIsPlaying = (track['@attr'] && track['@attr'].nowplaying === "true") ? true : false;
         let finalIsPlaying = rawIsPlaying;
 
         if (rawIsPlaying) {
-            // Если Last.fm говорит "Играет" - верим сразу
             playingCounter = 0;
             finalIsPlaying = true;
         } else {
-            // Если Last.fm говорит "Не играет", а у нас до этого играло...
             if (lastIsPlaying === true) {
-                playingCounter++; 
-                // Первые 4 проверки (около 12 сек) игнорируем "паузу"
-                // Это спасает, если API на секунду отдал ошибку
-                if (playingCounter < 4) { 
-                    finalIsPlaying = true; 
-                } else {
-                    finalIsPlaying = false;
-                }
+                playingCounter++;
+                if (playingCounter < 4) finalIsPlaying = true;
+                else finalIsPlaying = false;
             }
         }
 
-        // --- ЛОГИКА 1: ОБНОВЛЕНИЕ ПЕСНИ ---
         if (lastSongName !== currentSongName) {
-            console.log("LastFM: Song changed to", currentSongName);
             lastSongName = currentSongName;
-            
-            // Сбрасываем буфер при смене трека, чтобы новая песня сразу определилась верно
             playingCounter = 0;
 
             infoContainer.style.opacity = '0';
             artEl.style.opacity = '0';
 
             let rawLastFmArt = "";
-            if(track.image && track.image.length > 3 && track.image[3]['#text']) rawLastFmArt = track.image[3]['#text'];
+            if (track.image && track.image.length > 3 && track.image[3]['#text']) rawLastFmArt = track.image[3]['#text'];
             else if (track.image && track.image.length > 2 && track.image[2]['#text']) rawLastFmArt = track.image[2]['#text'];
-            
+
             const isDefault = rawLastFmArt.includes("2a96cbd8b46e442fc41c2b86b821562f") || rawLastFmArt === "";
             const artCandidate = isDefault ? null : rawLastFmArt;
 
@@ -209,11 +181,10 @@ async function updateLastFM() {
             setTimeout(() => {
                 songTitleEl.textContent = currentSongName;
                 artistEl.textContent = currentArtist;
-                // Генерируем ссылку на поиск в ВК
                 const vkSearchUrl = `https://vk.com/audio?q=${encodeURIComponent(currentSongName + " " + currentArtist)}`;
-                
+
                 songLinkEl.href = vkSearchUrl;
-                if(linkEl) linkEl.href = vkSearchUrl; // Обложка тоже ведет на ВК
+                if (linkEl) linkEl.href = vkSearchUrl;
 
                 if (finalArtUrl) {
                     artEl.src = finalArtUrl;
@@ -225,11 +196,8 @@ async function updateLastFM() {
             }, 300);
         }
 
-        // --- ЛОГИКА 2: ОБНОВЛЕНИЕ СТАТУСА ---
         if (lastIsPlaying !== finalIsPlaying) {
-            console.log("LastFM: Status changed to", finalIsPlaying ? "Playing" : "Paused");
             lastIsPlaying = finalIsPlaying;
-
             if (finalIsPlaying) {
                 statusEl.textContent = "LISTENING NOW";
                 statusEl.className = "text-[10px] font-bold text-green-500 uppercase tracking-wider mb-0.5 animate-pulse smooth-all";
@@ -244,11 +212,10 @@ async function updateLastFM() {
     }
 }
 
-// 4. ЗАПУСК
 updateLastFM();
 setInterval(updateLastFM, 3000);
 
-// === 3. DISCORD (ULTRA SMOOTH) ===
+// --- DISCORD INTEGRATION (LANYARD) ---
 let discordTimer = null;
 let currentActivityStart = null;
 let activityStateStr = "";
@@ -267,21 +234,21 @@ function connectLanyard() {
         try {
             const data = JSON.parse(event.data);
             if (data.t === 'INIT_STATE' || data.t === 'PRESENCE_UPDATE') updateStatus(data.d);
-        } catch(e) {}
+        } catch (e) { }
     };
     ws.onclose = () => { setTimeout(connectLanyard, 5000); };
-    setInterval(() => { if(ws.readyState === 1) ws.send(JSON.stringify({ op: 3 })); }, 30000);
+    setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({ op: 3 })); }, 30000);
 }
 
 function animateChange(element, newValue, type = 'text') {
-    if(type === 'image' && element.src === newValue) return;
-    if(type === 'html' && element.innerHTML === newValue) return;
-    if(type === 'text' && element.textContent === newValue) return;
+    if (type === 'image' && element.src === newValue) return;
+    if (type === 'html' && element.innerHTML === newValue) return;
+    if (type === 'text' && element.textContent === newValue) return;
 
     element.style.opacity = '0';
     setTimeout(() => {
-        if(type === 'image') element.src = newValue;
-        else if(type === 'html') element.innerHTML = newValue;
+        if (type === 'image') element.src = newValue;
+        else if (type === 'html') element.innerHTML = newValue;
         else element.textContent = newValue;
         element.style.opacity = '1';
     }, 200);
@@ -296,31 +263,29 @@ function updateStatus(data) {
     const statusTextEl = document.getElementById('discord-status-text');
     const subTextEl = document.getElementById('discord-sub-text');
 
-    if(!data.discord_user) return;
-    
+    if (!data.discord_user) return;
+
     const user = data.discord_user;
     const userAvatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=512` : `https://cdn.discordapp.com/embed/avatars/0.png`;
     const statusColor = statusColors[data.discord_status] || statusColors.offline;
-    
-    if(mainAvatar) {
-        if(mainAvatar.src !== userAvatarUrl) {
+
+    if (mainAvatar) {
+        if (mainAvatar.src !== userAvatarUrl) {
             mainAvatar.src = userAvatarUrl;
             mainAvatar.onload = () => mainAvatar.classList.remove('opacity-0');
         }
-        
-        // Применяем класс статуса к контейнеру градиента
+
         const avatarRing = document.getElementById('avatar-ring');
-        if(avatarRing) {
+        if (avatarRing) {
             avatarRing.classList.remove('online', 'idle', 'dnd', 'offline');
-            const statusClass = data.discord_status;
-            avatarRing.classList.add(statusClass);
+            avatarRing.classList.add(data.discord_status);
         }
     }
-    
-    if(usernameEl) usernameEl.textContent = user.global_name || user.username;
-    if(discordCard) discordCard.classList.remove('hidden');
 
-    if(discordTimer) clearInterval(discordTimer);
+    if (usernameEl) usernameEl.textContent = user.global_name || user.username;
+    if (discordCard) discordCard.classList.remove('hidden');
+
+    if (discordTimer) clearInterval(discordTimer);
     discordTimer = null;
     currentActivityStart = null;
     activityStateStr = "";
@@ -331,37 +296,34 @@ function updateStatus(data) {
     let showDot = true;
     let dotContent = "";
     let dotClass = "";
-    
-    if(data.listening_to_spotify) {
+
+    if (data.listening_to_spotify) {
         newTitleHTML = '<span class="text-green-400 font-bold">Spotify</span>';
         activityStateStr = `${data.spotify.song} - ${data.spotify.artist}`;
         newLargeImage = data.spotify.album_art_url;
         isSquareImage = true;
-        showDot = false; 
-    } 
+        showDot = false;
+    }
     else if (data.activities && data.activities.length > 0) {
         const game = data.activities.find(a => a.type === 0) || data.activities[0];
         newTitleHTML = `Playing <span class="text-white font-bold truncate">${game.name}</span>`;
-        
+
         let largeIcon = game.assets?.large_image;
-        if(largeIcon?.startsWith('mp:')) largeIcon = largeIcon.replace('mp:', 'https://media.discordapp.net/');
-        else if(largeIcon) largeIcon = `https://cdn.discordapp.com/app-assets/${game.application_id}/${largeIcon}.png`;
+        if (largeIcon?.startsWith('mp:')) largeIcon = largeIcon.replace('mp:', 'https://media.discordapp.net/');
+        else if (largeIcon) largeIcon = `https://cdn.discordapp.com/app-assets/${game.application_id}/${largeIcon}.png`;
         newLargeImage = largeIcon || userAvatarUrl;
         isSquareImage = !!largeIcon;
 
-        if(game.assets?.small_image) {
+        if (game.assets?.small_image) {
             let smallIcon = game.assets.small_image;
-            if(smallIcon.startsWith('mp:')) smallIcon = smallIcon.replace('mp:', 'https://media.discordapp.net/');
+            if (smallIcon.startsWith('mp:')) smallIcon = smallIcon.replace('mp:', 'https://media.discordapp.net/');
             else smallIcon = `https://cdn.discordapp.com/app-assets/${game.application_id}/${smallIcon}.png`;
-            
+
             showDot = true;
             dotClass = "absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-[#111] bg-[#111] flex items-center justify-center overflow-hidden transition-all duration-300";
             dotContent = `<img src="${smallIcon}" class="w-full h-full object-cover">`;
         } else {
-            // Fix: If there is a large image (Rich Presence) but no small image -> hide the dot
-            // If it's a normal avatar (no large image) -> show the status dot
             showDot = !isSquareImage;
-            
             if (showDot) {
                 dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300";
                 dotContent = "";
@@ -370,19 +332,17 @@ function updateStatus(data) {
 
         activityStateStr = game.details || game.state || "In Game";
 
-        if(game.timestamps && game.timestamps.start) {
+        if (game.timestamps && game.timestamps.start) {
             currentActivityStart = game.timestamps.start;
-            updateGameString(); 
+            updateGameString();
             discordTimer = setInterval(updateGameString, 1000);
         }
-
-    } 
+    }
     else {
         newTitleHTML = data.discord_status.charAt(0).toUpperCase() + data.discord_status.slice(1);
         activityStateStr = "Chilling";
         newLargeImage = userAvatarUrl;
         isSquareImage = false;
-        
         showDot = true;
         dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300";
         dotContent = "";
@@ -390,15 +350,13 @@ function updateStatus(data) {
 
     animateChange(statusTextEl, newTitleHTML, 'html');
 
-    const avatarClass = isSquareImage 
-        ? "w-10 h-10 object-cover rounded-md transition-all duration-500 ease-in-out" 
+    const avatarClass = isSquareImage
+        ? "w-10 h-10 object-cover rounded-md transition-all duration-500 ease-in-out"
         : "w-10 h-10 object-cover rounded-full transition-all duration-500 ease-in-out";
 
-    if (cardAvatar.className !== avatarClass) {
-        cardAvatar.className = avatarClass;
-    }
+    if (cardAvatar.className !== avatarClass) cardAvatar.className = avatarClass;
 
-    if(cardAvatar.src !== newLargeImage) {
+    if (cardAvatar.src !== newLargeImage) {
         cardAvatar.style.opacity = '0';
         setTimeout(() => {
             cardAvatar.src = newLargeImage;
@@ -406,15 +364,12 @@ function updateStatus(data) {
         }, 200);
     }
 
-    if(!currentActivityStart) {
-        animateChange(subTextEl, activityStateStr, 'text');
-    }
+    if (!currentActivityStart) animateChange(subTextEl, activityStateStr, 'text');
 
-    if(showDot) {
+    if (showDot) {
         statusDot.style.display = 'flex';
-        statusDot.className = dotClass; 
-        
-        if(dotContent) {
+        statusDot.className = dotClass;
+        if (dotContent) {
             statusDot.innerHTML = dotContent;
             statusDot.style.backgroundColor = 'transparent';
         } else {
@@ -428,33 +383,75 @@ function updateStatus(data) {
 
 function updateGameString() {
     const el = document.getElementById('discord-sub-text');
-    if(!el || !currentActivityStart) return;
-    
+    if (!el || !currentActivityStart) return;
+
     const diff = Date.now() - currentActivityStart;
     let timeStr = "";
-    
-    if(diff > 0) {
+
+    if (diff > 0) {
         const hours = Math.floor(diff / 3600000);
         const minutes = Math.floor((diff % 3600000) / 60000);
         const seconds = Math.floor((diff % 60000) / 1000);
-        timeStr = `${hours>0?hours+':':''}${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')} elapsed`;
+        timeStr = `${hours > 0 ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} elapsed`;
     }
 
-    if(activityStateStr) {
-        el.innerHTML = `${activityStateStr} &bull; ${timeStr}`;
-    } else {
-        el.textContent = timeStr;
+    if (activityStateStr) el.innerHTML = `${activityStateStr} &bull; ${timeStr}`;
+    else el.textContent = timeStr;
+}
+
+// --- CONFIG INITIALIZATION ---
+function initConfig() {
+    const config = window.CONFIG;
+    if (!config) return;
+
+    document.title = config.title || "My Bio";
+    const nickEl = document.getElementById('main-nickname');
+    if (nickEl) nickEl.textContent = config.nickname || "User";
+
+    const bgPoster = document.getElementById('bg-poster');
+    const bgVideo = document.getElementById('video-bg');
+    if (bgPoster && config.background.poster && bgPoster.getAttribute('src') !== config.background.poster) {
+        bgPoster.src = config.background.poster;
+    }
+    if (bgVideo && config.background.video) {
+        const source = bgVideo.querySelector('source');
+        if (source && source.getAttribute('src') !== config.background.video) {
+            source.src = config.background.video;
+            bgVideo.load();
+        }
+    }
+
+    const socialContainer = document.getElementById('social-links');
+    if (socialContainer && config.social_links) {
+        const fragment = document.createDocumentFragment();
+        config.social_links.forEach(link => {
+            const a = document.createElement('a');
+            a.href = link.url;
+            a.target = "_blank";
+            a.className = "group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]";
+
+            if (link.icon) {
+                const i = document.createElement('i');
+                i.className = `${link.icon} text-2xl transition-transform duration-300 scale-75 group-hover:scale-[0.9] inline-block`;
+                a.appendChild(i);
+            } else if (link.svg) {
+                a.innerHTML = link.svg;
+            }
+            fragment.appendChild(a);
+        });
+        socialContainer.innerHTML = '';
+        socialContainer.appendChild(fragment);
     }
 }
 
-// === UTILS ===
+// --- UTILS ---
 function initTypewriter() {
-    const phrases = ["Into the Void", "Neon Dreams", "Silence is Loud", "Virtual Reality", "Error 404"];
+    const phrases = window.CONFIG.typewriter_phrases || ["Into the Void"];
     const typeEl = document.getElementById('typewriter');
     let phraseIndex = 0, charIndex = 0, isDeleting = false, typeSpeed = 100;
-    
+
     function type() {
-        if(!typeEl) return;
+        if (!typeEl) return;
         const currentPhrase = phrases[phraseIndex];
         if (isDeleting) {
             typeEl.textContent = currentPhrase.substring(0, charIndex - 1);
@@ -464,7 +461,7 @@ function initTypewriter() {
             charIndex++; typeSpeed = 150;
         }
         if (!isDeleting && charIndex === currentPhrase.length) {
-            isDeleting = true; typeSpeed = 2000; 
+            isDeleting = true; typeSpeed = 2000;
         } else if (isDeleting && charIndex === 0) {
             isDeleting = false; phraseIndex = (phraseIndex + 1) % phrases.length; typeSpeed = 500;
         }
@@ -472,36 +469,37 @@ function initTypewriter() {
     }
     type();
 }
+
 function setGreeting() {
     const h = new Date().getHours();
     const el = document.getElementById('time-greeting');
-    if(el) {
-        if(h < 6) el.textContent = "System Alert: Humans detected in sleeping state. 😴";
-        else if(h < 12) el.textContent = "Initializing morning protocols... 🌅";
-        else if(h < 18) el.textContent = "System operating in daylight mode. ☀️";
+    if (el) {
+        if (h < 6) el.textContent = "System Alert: Humans detected in sleeping state. 😴";
+        else if (h < 12) el.textContent = "Initializing morning protocols... 🌅";
+        else if (h < 18) el.textContent = "System operating in daylight mode. ☀️";
         else el.textContent = "Switching to night vision mode. 🌙";
     }
 }
 
-// === COPY & CONTEXT ===
 function initTooltips() {
     const cursorTooltip = document.getElementById('link-cursor-tooltip');
     const tooltipText = document.getElementById('tooltip-text');
-    if(!cursorTooltip) return;
+    if (!cursorTooltip) return;
     document.addEventListener('mousemove', (e) => {
         cursorTooltip.style.left = `${Math.min(e.clientX + 15, window.innerWidth - 150)}px`;
         cursorTooltip.style.top = `${Math.min(e.clientY + 15, window.innerHeight - 40)}px`;
     });
     document.querySelectorAll('a').forEach(link => {
         link.addEventListener('mouseenter', () => {
+            if (!window.matchMedia('(hover: hover)').matches) return;
             let url = link.href;
             try {
                 if (url.includes(window.location.hostname)) tooltipText.textContent = "SYSTEM ACTION";
                 else {
-                     let displayUrl = new URL(url).hostname + new URL(url).pathname;
-                     displayUrl = displayUrl.replace('www.', '');
-                     if(displayUrl.length > 25) displayUrl = displayUrl.substring(0, 25) + '...';
-                     tooltipText.textContent = ">> " + displayUrl;
+                    let displayUrl = new URL(url).hostname + new URL(url).pathname;
+                    displayUrl = displayUrl.replace('www.', '');
+                    if (displayUrl.length > 25) displayUrl = displayUrl.substring(0, 25) + '...';
+                    tooltipText.textContent = ">> " + displayUrl;
                 }
             } catch (e) { tooltipText.textContent = "LINK"; }
             cursorTooltip.style.opacity = '1';
@@ -509,10 +507,13 @@ function initTooltips() {
         link.addEventListener('mouseleave', () => { cursorTooltip.style.opacity = '0'; });
     });
 }
+
 const contextMenu = document.getElementById('custom-context-menu');
+let linkToCopy = null;
+
 document.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-    if(!contextMenu) return;
+    if (!contextMenu) return;
     const link = e.target.closest('a');
     document.getElementById('context-copy-text').textContent = link ? "Copy Link Address" : "Copy Site Link";
     linkToCopy = link ? link.href : window.location.href;
@@ -520,19 +521,23 @@ document.addEventListener('contextmenu', (e) => {
     contextMenu.style.top = `${e.clientY}px`;
     contextMenu.style.display = 'flex';
 });
-document.addEventListener('click', () => { if(contextMenu) contextMenu.style.display = 'none'; });
-let linkToCopy = null;
+
+document.addEventListener('click', () => { if (contextMenu) contextMenu.style.display = 'none'; });
+
 function handleCopyAction() {
     const url = linkToCopy || window.location.href;
     navigator.clipboard.writeText(url).then(() => {
         iziToast.show({ theme: 'dark', icon: 'fa-solid fa-link', title: 'Link', message: 'Copied', position: 'topCenter', progressBarColor: '#00ff88', timeout: 2000 });
     });
 }
+
 function copyDiscordNick() {
-    navigator.clipboard.writeText("engi4").then(() => {
+    const copyId = window.CONFIG.discord.copy_id || "User";
+    navigator.clipboard.writeText(copyId).then(() => {
         iziToast.show({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2', timeout: 2000 });
     });
 }
+
 function copyLastFM() {
     const song = document.getElementById('fm-song-title').textContent;
     const artist = document.getElementById('fm-artist').textContent;
@@ -542,22 +547,17 @@ function copyLastFM() {
     });
 }
 
-// === REBOOT SCREEN (NEW ANIMATION) ===
+// --- REBOOT SYSTEM ---
 function triggerReboot() {
-    // 1. Hide Context Menu
-    if(contextMenu) contextMenu.style.display = 'none';
-
-    // 2. Hide Main UI
+    if (contextMenu) contextMenu.style.display = 'none';
     mainContainer.classList.add('ui-hidden');
     techStats.classList.add('ui-hidden');
 
-    // 3. Show Reboot Screen
     const screen = document.getElementById('reboot-screen');
     const logs = document.getElementById('reboot-logs');
     screen.classList.remove('hidden');
-    screen.style.display = 'flex'; // Force display
+    screen.style.display = 'flex';
 
-    // 4. Logs Animation
     const lines = [
         "SYSTEM_HALT: CRITICAL_PROCESS_DIED",
         "Collecting error info...",
@@ -568,54 +568,45 @@ function triggerReboot() {
     ];
 
     let delay = 0;
-    lines.forEach((line, i) => {
+    lines.forEach((line) => {
         setTimeout(() => {
             const p = document.createElement('div');
             p.textContent = `> ${line}`;
             logs.appendChild(p);
             window.scrollTo(0, document.body.scrollHeight);
         }, delay);
-        // Случайная задержка между строками для реализма
         delay += 300 + Math.random() * 400;
     });
 
-    // 5. Reload Page
-    setTimeout(() => {
-        location.reload();
-    }, delay + 500);
+    setTimeout(() => { location.reload(); }, delay + 500);
 }
 
 document.addEventListener('keydown', (e) => {
-    if(e.code === 'Insert') {
+    if (e.code === 'Insert') {
         mainContainer.classList.toggle('ui-hidden');
         techStats.classList.toggle('ui-hidden');
         if (videoBg) {
-             const vignette = document.getElementById('vignette');
-             if (mainContainer.classList.contains('ui-hidden')) {
-                 videoBg.classList.add('video-clean');
-                 if(vignette) vignette.style.opacity = '0'; 
-             } else {
-                 videoBg.classList.remove('video-clean');
-                 if(vignette) vignette.style.opacity = '1';
-             }
+            const vignette = document.getElementById('vignette');
+            if (mainContainer.classList.contains('ui-hidden')) {
+                videoBg.classList.add('video-clean');
+                if (vignette) vignette.style.opacity = '0';
+            } else {
+                videoBg.classList.remove('video-clean');
+                if (vignette) vignette.style.opacity = '1';
+            }
         }
     }
 });
 
-// === SMOOTH VIDEO LOAD ===
+// --- SMOOTH VIDEO LOAD ---
 const videoElement = document.getElementById('video-bg');
 
 function onVideoReady() {
-    // Добавляем класс, который плавно меняет opacity с 0 на 1
     videoElement.classList.add('video-ready');
 }
 
-// Проверяем, может видео уже загрузилось (из кэша)
-if (videoElement.readyState >= 3) {
-    onVideoReady();
-} else {
-    // Если нет, ждем события, когда данных будет достаточно для воспроизведения
+if (videoElement.readyState >= 3) onVideoReady();
+else {
     videoElement.addEventListener('canplaythrough', onVideoReady, { once: true });
-    // Подстраховка: если canplaythrough тупит, сработает просто при загрузке данных
     videoElement.addEventListener('loadeddata', onVideoReady, { once: true });
 }

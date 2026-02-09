@@ -8,7 +8,26 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
 
-    <!-- Libraries -->
+    <!-- Meta Tags -->
+    <meta name="title" content="engi // system">
+    <meta name="description" content="Neon Dreams & Developer Bio">
+    <meta name="theme-color" content="#000000">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://engi-bio.vercel.app/">
+    <meta property="og:title" content="engi // system">
+    <meta property="og:description" content="Neon Dreams & Developer Bio">
+    <meta property="og:image" content="screenshot.webp">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://engi-bio.vercel.app/">
+    <meta property="twitter:title" content="engi // system">
+    <meta property="twitter:description" content="Neon Dreams & Developer Bio">
+    <meta property="twitter:image" content="screenshot.webp">
+
+    <!-- Libraries & Assets -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
@@ -16,11 +35,11 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Quicksand:wght@300;500;700;900&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;700;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="config.js"></script>
 </head>
 
 <body class="text-white min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden relative">
 
-    <!-- Overlay -->
     <div id="overlay">
         <div class="relative w-full h-full flex flex-col items-center justify-center">
             <div class="scanline"></div>
@@ -36,27 +55,18 @@
     <!-- Background -->
     <div id="noise"></div>
     <div id="vignette"></div>
-    <!-- 1. Статичная картинка (лежит в самом низу, видна сразу) -->
-    <!-- Убедись, что имя файла совпадает! Ты написал, что у тебя png -->
-    <img id="bg-poster" src="image/bg-poster.png" alt="Background">
-
-    <!-- 2. Видео (лежит поверх картинки, но скрыто opacity: 0) -->
+    <img id="bg-poster" src="image/bg-poster.webp" alt="Background">
     <video id="video-bg" autoplay loop muted playsinline>
         <source src="video/miyabi-fox-zenless-zone-zero-moewalls-com.mp4" type="video/mp4">
     </video>
 
-    <!-- Tech Stats (Mobile Optimized) -->
-    <!-- Изменения: 
-         1. text-[9px] для мобилок, text-[10px] для ПК (md:text-[10px])
-         2. Отступы top-3 right-3 для мобилок, top-4 right-4 для ПК
-    -->
+    <!-- Tech Stats -->
     <div id="tech-stats"
         class="fixed top-3 right-3 md:top-4 md:right-4 z-50 text-right mono-font text-[9px] md:text-[10px] text-green-500 opacity-80 pointer-events-none hidden flex flex-col items-end">
         <div>FPS: <span id="fps-counter">60</span></div>
         <div>PING: <span id="ping-counter">14</span>ms</div>
         <div id="platform-display">PLATFORM: <span class="text-green-500">...</span></div>
 
-        <!-- Линия и подсказка INSERT скрыты на мобилках (hidden), но видны на ПК (md:block) -->
         <div class="hidden md:block h-px bg-white/20 w-full my-1"></div>
         <div class="hidden md:block mt-1 text-green/50">HIDE MENU: <span class="text-green">INSERT</span></div>
     </div>
@@ -64,19 +74,15 @@
     <!-- Main Card -->
     <div id="main-container"
         class="relative z-10 w-full max-w-md p-4 hidden flex-grow flex items-center justify-center">
-        <!-- glass-card -->
         <div class="glass-card rounded-2xl p-8 flex flex-col items-center text-center relative overflow-hidden w-full"
             data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
 
-            <!-- Spotlight Layer -->
             <div id="main-spotlight"
                 class="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 z-0"
                 style="background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.15), transparent 40%);">
             </div>
 
-            <!-- Content Wrapper -->
             <div class="relative z-10 w-full flex flex-col items-center">
-
                 <!-- Avatar -->
                 <div class="relative mb-6 fade-in-stagger">
                     <div id="avatar-ring" class="avatar-container offline">
@@ -87,7 +93,7 @@
 
                 <!-- Nickname -->
                 <h1 class="text-6xl font-black mb-2 tracking-tighter drop-shadow-2xl fade-in-stagger delay-100">
-                    <span class="neon-pulse font-[Quicksand]">engi</span>
+                    <span id="main-nickname" class="neon-pulse font-[Quicksand]">...</span>
                 </h1>
 
                 <!-- Typewriter -->
@@ -96,15 +102,14 @@
                         class="cursor h-4"></span>
                 </div>
 
-                <!-- Greeting -->
                 <div id="time-greeting" class="text-[10px] text-neutral-500 mb-6 mono-font fade-in-stagger delay-100">
                 </div>
 
                 <!-- Discord Status -->
                 <div id="discord-card" onclick="copyDiscordNick()"
-                    class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-200 hover:bg-[#151515] transition cursor-pointer group shadow-lg hidden relative active:scale-95 duration-200">
+                    class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-200 smart-hover transition cursor-pointer smart-group shadow-lg hidden relative active:scale-95 duration-200">
                     <div
-                        class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center rounded-xl z-20">
+                        class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 smart-overlay transition duration-300 flex items-center justify-center rounded-xl z-20">
                         <span class="text-xs font-bold text-white tracking-widest uppercase"><i
                                 class="fa-regular fa-copy mr-2"></i>Copy ID</span>
                     </div>
@@ -130,44 +135,37 @@
                     </div>
                 </div>
 
-                <!-- Last.fm Integration (Fixed Borders) -->
+                <!-- Last.fm Integration -->
                 <div id="fm-container"
-                    class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-300 hover:bg-black/20 transition duration-500 overflow-hidden h-[74px]">
+                    class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-300 smart-hover-bg transition duration-500 overflow-hidden h-[74px]">
 
-                    <!-- Cover Art -->
                     <a id="fm-link" href="#" target="_blank"
-                        class="shrink-0 relative w-12 h-12 group/cover cursor-pointer rounded-md">
-                        <!-- Placeholder (Нота): Добавлен rounded-md, чтобы рамка не обрезалась -->
+                        class="shrink-0 relative w-12 h-12 smart-group cursor-pointer rounded-md">
                         <div
                             class="absolute inset-0 bg-[#1a1a1a] rounded-md flex items-center justify-center border border-white/10 z-0">
                             <i class="fa-solid fa-music text-neutral-600 text-sm"></i>
                         </div>
 
-                        <!-- Картинка -->
                         <img id="fm-art" src=""
                             class="relative z-10 w-full h-full object-cover rounded-md transition-opacity duration-500 opacity-0"
                             alt="Art">
 
-                        <!-- Hover Overlay (VK) -->
                         <div
-                            class="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition bg-black/40 rounded-md">
+                            class="absolute inset-0 z-20 flex items-center justify-center opacity-0 smart-overlay transition bg-black/40 rounded-md">
                             <i class="fa-brands fa-vk text-white text-lg drop-shadow-md"></i>
                         </div>
                     </a>
 
-                    <!-- Info & Controls -->
                     <div class="flex-1 min-w-0 flex flex-col justify-center h-full transition-opacity duration-300 gap-[2px]"
                         id="fm-info">
 
-                        <!-- Row 1: Status + Icons -->
                         <div class="flex items-center justify-start gap-2 w-full h-4">
                             <span
                                 class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider leading-none truncate"
                                 id="fm-status">LOADING</span>
 
-                            <!-- Icons -->
                             <div
-                                class="flex items-center gap-2 shrink-0 opacity-80 hover:opacity-100 transition pb-[4px]">
+                                class="flex items-center gap-2 shrink-0 opacity-80 smart-opacity-hover transition pb-[4px]">
                                 <div class="text-[#b90000]" title="Data Source: Last.fm">
                                     <i class="fa-brands fa-lastfm text-[12px]"></i>
                                 </div>
@@ -177,89 +175,35 @@
                             </div>
                         </div>
 
-                        <!-- Row 2: Title + VK Icon -->
                         <div class="flex items-center w-full h-4 mt-0.5">
                             <a id="fm-song-link" href="#" target="_blank"
-                                class="flex items-center gap-1.5 min-w-0 max-w-full group/title">
+                                class="flex items-center gap-1.5 min-w-0 max-w-full smart-group">
                                 <span id="fm-song-title"
-                                    class="truncate text-xs font-bold text-white group-hover/title:text-[#0077FF] transition leading-none cyrillic-font">Searching...</span>
+                                    class="truncate text-xs font-bold text-white smart-text-accent transition leading-none cyrillic-font">Searching...</span>
                                 <i
-                                    class="fa-brands fa-vk text-[12px] text-[#0077FF] shrink-0 opacity-70 group-hover/title:opacity-100 transition"></i>
+                                    class="fa-brands fa-vk text-[12px] text-[#0077FF] shrink-0 opacity-70 smart-opacity-100 transition"></i>
                             </a>
                         </div>
 
-                        <!-- Row 3: Artist + Copy Btn -->
                         <div class="flex items-center justify-between w-full h-3">
                             <div class="text-[10px] text-neutral-400 font-medium truncate leading-none pr-2 cyrillic-font"
                                 id="fm-artist">...</div>
 
                             <button onclick="copyLastFM()"
-                                class="text-neutral-600 hover:text-white transition-colors cursor-pointer shrink-0"
+                                class="text-neutral-600 smart-text-white transition-colors cursor-pointer shrink-0"
                                 title="Copy Track Name">
                                 <i class="fa-regular fa-copy text-[10px]"></i>
                             </button>
                         </div>
-
                     </div>
                 </div>
 
                 <!-- Socials -->
-                <div class="flex flex-wrap justify-center gap-3 mb-2 fade-in-stagger delay-400 max-w-[95%]">
-                    <a href="https://discord.com/users/1257675618175422576" target="_blank"
-                        class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                        <i
-                            class="fa-brands fa-discord text-2xl transition-transform duration-300 scale-75 group-hover:scale-[0.9] inline-block"></i>
-                    </a>
-                    <a href="https://github.com/engix3" target="_blank"
-                        class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                        <i
-                            class="fa-brands fa-github text-2xl transition-transform duration-300 scale-75 group-hover:scale-[0.9] inline-block"></i>
-                    </a>
-                    <a href="https://t.me/Engih1" target="_blank"
-                        class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                        <i
-                            class="fa-brands fa-telegram text-2xl transition-transform duration-300 scale-75 group-hover:scale-[0.9] inline-block"></i>
-                    </a>
-                    <a href="https://vk.com/engiyt" target="_blank"
-                        class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                        <i
-                            class="fa-brands fa-vk text-2xl transition-transform duration-300 scale-75 group-hover:scale-[0.9] inline-block"></i>
-                    </a>
-                    <a href="https://www.tiktok.com/@engi_tt" target="_blank"
-                        class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                        <i
-                            class="fa-brands fa-tiktok text-2xl transition-transform duration-300 scale-75 group-hover:scale-[0.9] inline-block"></i>
-                    </a>
-                    <a href="https://www.youtube.com/@engiX3" target="_blank"
-                        class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                        <i
-                            class="fa-brands fa-youtube text-2xl transition-transform duration-300 scale-75 group-hover:scale-[0.9] inline-block"></i>
-                    </a>
-                    <a href="https://steamcommunity.com/id/engioff/" target="_blank"
-                        class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                        <i
-                            class="fa-brands fa-steam text-2xl transition-transform duration-300 scale-75 group-hover:scale-[0.9] inline-block"></i>
-                    </a>
-                    <a href="https://www.roblox.com/users/540243341/profile" target="_blank"
-                        class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                        <svg class="w-5 h-5 fill-current text-white group-hover:scale-110 transition-transform duration-300"
-                            role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path
-                                d="M18.926 23.998 0 18.892 5.075.002 24 5.108ZM15.348 10.09l-5.282-1.453-1.414 5.273 5.282 1.453z" />
-                        </svg>
-                    </a>
-                    <a href="https://rscripts.net/@engi" target="_blank"
-                        class="group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="w-8 h-8 text-white transition-colors duration-300" viewBox="0 0 820 820" fill="none">
-                            <path fill="currentColor"
-                                d="M550 125.1c-27.5 15.6-54.5 30.6-68.5 38.1-6.6 3.5-21.7 11.8-33.5 18.5-11.8 6.6-28 15.5-36 19.8-8 4.3-17.9 9.9-22 12.5-9.3 5.8-78.4 44.2-90 50-8 4-18.3 9.8-53 29.5-8 4.6-17.9 10.1-22 12.3l-7.5 3.9.1 8.9c0 4.9.3 48.6.6 97.1.4 48.5.9 88.6 1.2 89.1.8 1.3 29.8 17.5 57.4 32l10.2 5.3.1-46.3c.1-25.5.5-68.6.8-95.8l.6-49.4 11.1-6.1c6.1-3.4 12.4-7.1 14-8.2 1.6-1.1 7-4.2 11.9-6.8 5-2.7 13.1-7.2 18-10.1 10.1-5.9 60.8-34.8 73-41.6 4.4-2.5 23-13.1 41.4-23.6 18.3-10.5 34.6-19.4 36.3-19.7 5.9-1.3 5.8-2.4 5.8 44.5v42.8l-4.2 3.7c-5.1 4.3-24.4 16.5-41.3 26-6.6 3.7-27.7 16-46.9 27.4l-34.8 20.6.7 31.5c1.1 52.9 1.3 57.3 2.7 58.6 1.4 1.2 33.3 19.6 54.5 31.5 6.8 3.7 13.5 7.6 15 8.7 1.6 1 8 4.7 14.3 8.1 12.7 7 35.7 21.9 38 24.6 1.3 1.5 1.6 10 2 52.9l.5 51.1 28.5 16.3c41.1 23.6 47.1 26.7 48.1 25.1.4-.8.8-43.1.7-94.2 0-90.9-.1-92.8-2-95.2-1.1-1.4-4.1-3.7-6.8-5-5.6-2.9-73.9-42.8-93.7-54.8-7.6-4.6-18.2-11-23.5-14.1-5.4-3.1-9.8-6.3-9.8-7.1 0-.7 2.6-2.9 5.8-4.8 9.4-5.6 34-19.1 47.3-26 6.8-3.5 21.2-11.1 31.9-16.9 10.7-5.8 24.8-13.2 31.3-16.4l11.7-5.9V240.8c0-69.8-.1-126.8-.2-126.8-.2 0-9.1 5-19.8 11.1z" />
-                        </svg>
-                    </a>
+                <div id="social-links"
+                    class="flex flex-wrap justify-center gap-3 mb-2 fade-in-stagger delay-400 max-w-[95%]">
+                    <!-- Links will be injected here -->
                 </div>
-
-            </div> <!-- End Content Wrapper -->
-
+            </div>
         </div>
     </div>
 
@@ -270,7 +214,7 @@
             <i class="fa-solid fa-link text-xs w-5 text-center"></i>
             <span id="context-copy-text">Copy Link</span>
         </button>
-        <button class="menu-item" onclick="window.open('https://github.com/engix3/mybio-rework', '_blank')">
+        <button class="menu-item" onclick="window.open(window.CONFIG.context_menu.source_code_url, '_blank')">
             <i class="fa-brands fa-github text-xs w-5 text-center"></i> Source Code
         </button>
         <div class="h-[1px] bg-white/10 w-full my-0.5"></div>

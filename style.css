@@ -17,7 +17,7 @@ body {
 
 /* --- BACKGROUND EFFECTS --- */
 
-/* Шум (Зерно) */
+/* Film Grain */
 #noise {
     display: none;
     position: fixed;
@@ -31,23 +31,21 @@ body {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-/* Затемнение (Вместо виньетки) */
+/* Background Dimming */
 #vignette {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.4); 
-    box-shadow: none; 
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: none;
     pointer-events: none;
     z-index: 4;
     transition: opacity 1.5s ease;
 }
 
-/* --- ФОНОВЫЕ СЛОИ --- */
-
-/* Статичная картинка (Z-Index -2, самый нижний) */
+/* Static Poster (Bottom Layer) */
 #bg-poster {
     position: fixed;
     top: 0;
@@ -55,12 +53,12 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: -2; /* Лежит ПОД видео */
-    filter: blur(8px) brightness(0.7); /* Тот же эффект, что у видео */
+    z-index: -2;
+    filter: blur(8px) brightness(0.7);
     transform: scale(1.05);
 }
 
-/* Видео (Z-Index -1, лежит НАД картинкой) */
+/* Video Background */
 #video-bg {
     position: fixed;
     right: 0;
@@ -69,20 +67,16 @@ body {
     min-height: 100%;
     z-index: -1;
     object-fit: cover;
-    
     filter: blur(8px) brightness(0.7);
-    transform: scale(1.05); 
-    
-    opacity: 0; /* Скрыто при загрузке */
+    transform: scale(1.05);
+    opacity: 0;
     transition: filter 1.5s ease, transform 1.5s ease, opacity 2s ease-in-out;
 }
 
-/* Когда JS добавит этот класс, видео плавно появится */
 #video-bg.video-ready {
     opacity: 1;
 }
 
-/* Класс для очистки (клавиша Insert) */
 .video-clean {
     filter: blur(0px) brightness(1.0) !important;
     transform: scale(1.0) !important;
@@ -90,7 +84,6 @@ body {
 
 /* --- OVERLAY & ANIMATIONS --- */
 
-/* Экран Входа */
 #overlay {
     position: fixed;
     inset: 0;
@@ -104,7 +97,6 @@ body {
     cursor: pointer;
 }
 
-/* Сканирующая линия */
 .scanline {
     width: 100%;
     height: 2px;
@@ -115,14 +107,24 @@ body {
 }
 
 @keyframes scan {
-    0% { top: 0%; opacity: 0; }
-    10%, 90% { opacity: 1; }
-    100% { top: 100%; opacity: 0; }
+    0% {
+        top: 0%;
+        opacity: 0;
+    }
+
+    10%,
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        top: 100%;
+        opacity: 0;
+    }
 }
 
 /* --- UI COMPONENTS --- */
 
-/* Стекло (Карточка) */
 .glass-card {
     background: rgba(10, 10, 10, 0.6);
     backdrop-filter: blur(20px);
@@ -133,48 +135,96 @@ body {
     transform: perspective(1000px);
 }
 
-/* Spotlight Layer */
 #main-spotlight {
-    /* Регулируйте силу свечения здесь: изменяйте значение alpha (последний параметр rgba) */
-    /* Для более сильного эффекта: rgba(255,255,255,0.3) */
-    /* Для более слабого эффекта: rgba(255,255,255,0.05) */
-    background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.15), transparent 40%);
+    background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.15), transparent 40%);
 }
 
-/* Показываем spotlight при наведении на карточку */
-.glass-card:hover #main-spotlight {
-    opacity: 0.5;
+@media (hover: hover) {
+    .glass-card:hover #main-spotlight {
+        opacity: 0.5;
+    }
+
+    /* Smart Hover effects */
+    .smart-hover:hover {
+        background-color: rgba(21, 21, 21, 1) !important;
+    }
+
+    .smart-hover-bg:hover {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .smart-group:hover .smart-overlay {
+        opacity: 1 !important;
+    }
+
+    .smart-group:hover .smart-text-accent {
+        color: #0077FF !important;
+    }
+
+    .smart-group:hover .smart-opacity-100 {
+        opacity: 1 !important;
+    }
+
+    .smart-opacity-hover:hover {
+        opacity: 1 !important;
+    }
+
+    .smart-text-white:hover {
+        color: white !important;
+    }
 }
 
-/* Тултипы */
+/* Tooltips */
 .tooltip {
     opacity: 0;
     transform: translateY(10px) translateX(-50%);
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     pointer-events: none;
 }
-.group:hover .tooltip {
-    opacity: 1;
-    transform: translateY(0) translateX(-50%);
+
+@media (hover: hover) {
+    .group:hover .tooltip {
+        opacity: 1;
+        transform: translateY(0) translateX(-50%);
+    }
 }
 
-/* Анимация появления (Stagger) */
+/* Stagger Animations */
 @keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
+
 .fade-in-stagger {
     opacity: 0;
     animation: slideIn 0.6s ease forwards;
 }
-.delay-100 { animation-delay: 0.1s; }
-.delay-200 { animation-delay: 0.2s; }
-.delay-300 { animation-delay: 0.3s; }
-.delay-400 { animation-delay: 0.4s; }
 
-/* --- UI VISIBILITY CONTROL (INSERT) --- */
+.delay-100 {
+    animation-delay: 0.1s;
+}
 
-/* 1. Заморозка после интро */
+.delay-200 {
+    animation-delay: 0.2s;
+}
+
+.delay-300 {
+    animation-delay: 0.3s;
+}
+
+.delay-400 {
+    animation-delay: 0.4s;
+}
+
+/* --- UI VISIBILITY CONTROL --- */
+
 body.intro-finished .fade-in-stagger {
     opacity: 1 !important;
     transform: none !important;
@@ -182,18 +232,17 @@ body.intro-finished .fade-in-stagger {
     transition: opacity 0.5s ease, transform 0.5s ease !important;
 }
 
-/* 2. Скрытие интерфейса */
 .ui-hidden {
     opacity: 0 !important;
     pointer-events: none !important;
     transform: scale(0.95);
     visibility: hidden;
-    /* Задержка visibility для плавной анимации */
     transition: opacity 0.5s ease, transform 0.5s ease, visibility 0s linear 0.5s !important;
 }
 
-/* Плавность для контейнеров */
-#main-container, #tech-stats, #footer-info {
+#main-container,
+#tech-stats,
+#footer-info {
     opacity: 1;
     visibility: visible;
     transition: opacity 0.5s ease, transform 0.5s ease, visibility 0s linear 0s;
@@ -201,7 +250,6 @@ body.intro-finished .fade-in-stagger {
 
 /* --- TYPOGRAPHY & EFFECTS --- */
 
-/* Курсор печати */
 .cursor {
     display: inline-block;
     width: 2px;
@@ -209,83 +257,138 @@ body.intro-finished .fade-in-stagger {
     animation: blink 1s infinite;
 }
 
-/* Текст печатной машинки (терминальный стиль) */
 #typewriter {
     color: #00ff00 !important;
 }
 
-@keyframes blink { 50% { opacity: 0; } }
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
 
-/* Блюр при наведении */
 .blur-reveal {
     filter: blur(6px);
     transition: filter 0.4s ease;
     cursor: crosshair;
 }
-.blur-reveal:hover { filter: blur(0px); }
 
-/* Технический шрифт */
-.mono-font { font-family: 'JetBrains Mono', monospace; }
-
-/* Шрифт для русского текста (включая кириллицу) */
-.cyrillic-font {
-    font-family: 'Inter', sans-serif;
-    line-height: 1.2; /* Увеличиваем высоту строки для учета выносных элементов */
-    overflow: visible; /* Обеспечиваем видимость выносных элементов */
+@media (hover: hover) {
+    .blur-reveal:hover {
+        filter: blur(0px);
+    }
 }
 
-/* Коррекция для элементов с треками */
+.mono-font {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.cyrillic-font {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.2;
+    overflow: visible;
+}
+
 #fm-song-title,
 #fm-artist {
     line-height: 1.2 !important;
     overflow: hidden;
-    min-height: 1.2em; /* Обеспечиваем минимальную высоту для отображения выносных элементов */
-    text-overflow: ellipsis; /* Добавляем многоточие при переполнении */
-    white-space: nowrap; /* Запрещаем перенос строк */
+    min-height: 1.2em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* Белый Пульсирующий Неон */
 .neon-pulse {
     color: #fff;
-    text-shadow: 0 0 5px rgba(255,255,255,0.2), 0 0 10px rgba(255,255,255,0.2);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.2), 0 0 10px rgba(255, 255, 255, 0.2);
     animation: whitePulse 3s ease-in-out infinite;
 }
+
 @keyframes whitePulse {
-    0%, 100% { opacity: 0.9; text-shadow: 0 0 5px rgba(255,255,255,0.2); }
-    50% { opacity: 1; text-shadow: 0 0 20px rgba(255,255,255,0.6); }
+
+    0%,
+    100% {
+        opacity: 0.9;
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+    }
+
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+    }
 }
 
-/* Плавность для всего */
 .smooth-all {
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* --- AUDIO PLAYER --- */
-.player-bar { -webkit-appearance: none; height: 4px; background: rgba(255,255,255,0.2); border-radius: 5px; }
-.player-bar::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #fff; cursor: pointer; }
+/* --- PLAYER BARS --- */
 
-/* Фикс обрезки попапа громкости */
-.volume-popup > div { overflow: visible !important; }
+.player-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+}
+
+.player-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+}
+
+.volume-popup>div {
+    overflow: visible !important;
+}
 
 /* --- CONTEXT MENU --- */
+
 .glass-menu {
     background: rgba(15, 15, 15, 0.95);
     backdrop-filter: blur(12px);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     animation: menuFadeIn 0.2s ease-out;
 }
+
 @keyframes menuFadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
+
 .menu-item {
-    display: flex; align-items: center; width: 100%; padding: 8px 12px;
-    font-size: 12px; color: #ccc; border-radius: 4px; transition: 0.2s;
-    font-family: 'Outfit', sans-serif; font-weight: 500;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #ccc;
+    border-radius: 4px;
+    transition: 0.2s;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
 }
-.menu-item:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+
+@media (hover: hover) {
+    .menu-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+}
 
 /* --- NOTIFICATIONS (IZITOAST) --- */
+
 body .iziToast-wrapper .iziToast {
     background: rgba(15, 15, 15, 0.85) !important;
     backdrop-filter: blur(12px) !important;
@@ -293,30 +396,45 @@ body .iziToast-wrapper .iziToast {
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8) !important;
     border-radius: 14px !important;
-    overflow: hidden !important; /* Чтобы полоска не вылезала за углы */
+    overflow: hidden !important;
 }
 
-/* Исправление полоски прогресса */
 body .iziToast-wrapper .iziToast .iziToast-progressbar {
-    z-index: 9999 !important; /* Полоска всегда сверху */
+    z-index: 9999 !important;
     bottom: 0 !important;
     height: 3px !important;
     border-radius: 0 !important;
 }
 
-body .iziToast-wrapper .iziToast-body strong { font-family: 'Outfit', sans-serif !important; }
-body .iziToast-wrapper .iziToast-body p { font-family: 'Outfit', sans-serif !important; opacity: 0.7; }
+body .iziToast-wrapper .iziToast-body strong {
+    font-family: 'Outfit', sans-serif !important;
+}
+
+body .iziToast-wrapper .iziToast-body p {
+    font-family: 'Outfit', sans-serif !important;
+    opacity: 0.7;
+}
 
 /* --- TECH STATS ANIMATION --- */
+
 @keyframes statsSlideIn {
-    0% { opacity: 0; transform: translateY(-20px); }
-    100% { opacity: 0.8; transform: translateY(0); }
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    100% {
+        opacity: 0.8;
+        transform: translateY(0);
+    }
 }
+
 .stats-enter-anim {
     animation: statsSlideIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-/* Плавное изменение цвета контура аватара */
+/* --- AVATAR BORDER EFFECTS --- */
+
 @property --border-color-1 {
     syntax: '<color>';
     inherits: false;
@@ -352,13 +470,11 @@ body .iziToast-wrapper .iziToast-body p { font-family: 'Outfit', sans-serif !imp
     width: 136px;
     height: 136px;
     border-radius: 50%;
-    background: linear-gradient(
-        135deg,
-        var(--border-color-1),
-        var(--border-color-2),
-        var(--border-color-3),
-        var(--border-color-4)
-    );
+    background: linear-gradient(135deg,
+            var(--border-color-1),
+            var(--border-color-2),
+            var(--border-color-3),
+            var(--border-color-4));
     background-size: 400% 400%;
     padding: 4px;
     animation: gradient-shift 8s ease infinite;
@@ -410,7 +526,15 @@ body .iziToast-wrapper .iziToast-body p { font-family: 'Outfit', sans-serif !imp
 }
 
 @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
