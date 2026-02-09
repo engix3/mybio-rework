@@ -5,7 +5,7 @@
 [![Russian](https://img.shields.io/badge/lang-ru-red.svg?style=for-the-badge)](file:///c:/Users/User/Documents/GitHub/mybio-rework/README.md)
 [![English](https://img.shields.io/badge/lang-en-blue.svg?style=for-the-badge)](#)
 
-![Preview](https://raw.githubusercontent.com/engix3/mybio-rework/refs/heads/main/screenshot.png)
+![Preview](https://raw.githubusercontent.com/engix3/mybio-rework/refs/heads/main/screenshot.webp)
 
 > **Futuristic bio-hub in a terminal style.**  
 > Advanced integration with Discord and Last.fm, animated interfaces, and a cinematic atmosphere.
