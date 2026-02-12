@@ -3,7 +3,7 @@
 <div align="center">
 
 [![Russian](https://img.shields.io/badge/lang-ru-red.svg?style=for-the-badge)](#)
-[![English](https://img.shields.io/badge/lang-en-blue.svg?style=for-the-badge)](file:///c:/Users/User/Documents/GitHub/mybio-rework/README.en.md)
+[![English](https://img.shields.io/badge/lang-en-blue.svg?style=for-the-badge)](https://github.com/engix3/mybio-rework/blob/main/README.md)
 
 ![Preview](https://raw.githubusercontent.com/engix3/mybio-rework/refs/heads/main/screenshot.webp)
 
