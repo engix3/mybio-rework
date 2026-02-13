@@ -1,4 +1,26 @@
 window.CONFIG = {
+    // Cursor: 'default' or path to .cur/.png file
+    // Put cursor files in the root folder or cursor/ folder
+    cursor: 'cursor/cursor.cur',      // main cursor
+    cursorHotspot: { x: 7, y: 4 },    // hotspot offset for main cursor
+    cursorLink: 'cursor/link.cur',    // cursor for links
+    cursorLinkHotspot: { x: 7, y: 4 }, // hotspot offset for link cursor
+
+    // Cursor trail (follows cursor)
+    cursorTrail: {
+        enabled: true, // set true to enable
+        color: '#11ff00ff',
+        size: 6,
+        length: 12
+    },
+
+    // Click effect (sparkles on click)
+    cursorClickEffect: {
+        enabled: true, // set true to enable
+        color: '#11ff00ff',
+        count: 6
+    },
+
     // Page title shown in browser tab
     title: "engi // system",
 
@@ -7,11 +29,11 @@ window.CONFIG = {
 
     // Phrases for the typewriter effect
     typewriter_phrases: [
-        "Into the Void",
-        "Neon Dreams",
-        "Silence is Loud",
-        "Virtual Reality",
-        "Error 404"
+        "still searching empty logs for you",
+        "heart tuned to your name",
+        "counting seconds without you",
+        "appending you to every night",
+        "background process forever yours"
     ],
 
     // Background settings
@@ -19,7 +41,7 @@ window.CONFIG = {
         // Static image shown while video is loading
         poster: "image/bg-poster.webp",
         // Main video background file path
-        video: "video/miyabi-fox-zenless-zone-zero-moewalls-com.mp4"
+        video: "video/Ellen-Joe-Zenless-Zone-Zero-getlivewall-com.mp4"
     },
 
     // Social Links
@@ -95,8 +117,8 @@ window.CONFIG = {
 
     // System Specifications
     system_specs: {
-        cpu: "AMD Ryzen 7 7745HX",
-        gpu: "NVIDIA GeForce RTX 4050 Laptop",
+        cpu: "Ryzen 7 7745HX",
+        gpu: "RTX 4050 Laptop",
         ram: "16GB DDR5 4800MHz",
         storage: "512GB NVMe",
         platform: "Windows 11 Pro"

@@ -261,6 +261,22 @@ body.intro-finished .fade-in-stagger {
     color: #00ff00 !important;
 }
 
+/* Mobile typewriter fix - prevent line break and show ... prefix */
+@media (max-width: 640px) {
+    #typewriter {
+        display: inline-block;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+}
+
+@media (max-width: 480px) {
+    #typewriter {
+        max-width: 160px;
+    }
+}
+
 @keyframes blink {
     50% {
         opacity: 0;
@@ -296,6 +312,12 @@ body.intro-finished .fade-in-stagger {
     min-height: 1.2em;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Click scale animation */
+.click-scale,
+.click-animate {
+    transition: transform 0.1s ease-out !important;
 }
 
 .neon-pulse {

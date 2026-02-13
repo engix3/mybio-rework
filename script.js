@@ -19,6 +19,9 @@ const TOAST_COOLDOWN = 1000; // 1 second cooldown
 
 // Initialize Services
 initConfig();
+initCursor(); // Apply custom cursor
+initCursorTrail(); // Apply cursor trail
+initClickEffect(); // Apply click effect
 initTechStats(); // Load specs immediately
 connectLanyard();
 
@@ -433,6 +436,157 @@ function updateGameString() {
     else el.textContent = timeStr;
 }
 
+// --- CURSOR TRAIL ---
+let trailElements = [];
+let trailInitialized = false;
+
+function initCursorTrail() {
+    const trail = window.CONFIG.cursorTrail;
+    if (!trail || !trail.enabled) return;
+    if (isMobile) return; // Disable on mobile
+
+    // Wait for "click to enter" before creating elements
+    const checkAndCreate = () => {
+        if (entered && !trailInitialized) {
+            trailInitialized = true;
+            createTrail();
+        } else if (!entered) {
+            requestAnimationFrame(checkAndCreate);
+        }
+    };
+    checkAndCreate();
+}
+
+function createTrail() {
+    const trail = window.CONFIG.cursorTrail;
+    const trailColor = trail.color || '#00ff88';
+    const trailSize = trail.size || 4;
+    const trailLength = trail.length || 10;
+    const container = document.body;
+
+    for (let i = 0; i < trailLength; i++) {
+        const el = document.createElement('div');
+        el.style.cssText = `
+            position: fixed;
+            width: ${trailSize - i * 0.3}px;
+            height: ${trailSize - i * 0.3}px;
+            background: ${trailColor};
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99999;
+            opacity: ${1 - i / trailLength};
+            transition: transform 0.1s ease-out;
+        `;
+        container.appendChild(el);
+        trailElements.push(el);
+    }
+
+    let mouseX = 0, mouseY = 0;
+    const positions = Array(trailLength).fill({ x: 0, y: 0 });
+
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+
+    function animate() {
+        if (!entered || trailElements.length === 0) {
+            requestAnimationFrame(animate);
+            return;
+        }
+
+        positions.unshift({ x: mouseX, y: mouseY });
+        positions.pop();
+
+        trailElements.forEach((el, i) => {
+            const pos = positions[i + 1] || positions[i];
+            el.style.left = pos.x + 'px';
+            el.style.top = pos.y + 'px';
+        });
+
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
+
+// --- CURSOR CLICK EFFECT ---
+function initClickEffect() {
+    const effect = window.CONFIG.cursorClickEffect;
+    if (!effect || !effect.enabled) return;
+    if (isMobile) return; // Disable on mobile
+
+    const color = effect.color || '#00ff88';
+    const count = effect.count || 8;
+
+    document.addEventListener('click', (e) => {
+        if (!entered) return; // Only show after "click to enter"
+
+        const x = e.clientX;
+        const y = e.clientY;
+
+        for (let i = 0; i < count; i++) {
+            const particle = document.createElement('div');
+            const angle = (Math.PI * 2 / count) * i;
+            const velocity = 50 + Math.random() * 50;
+
+            particle.style.cssText = `
+                position: fixed;
+                left: ${x}px;
+                top: ${y}px;
+                width: 6px;
+                height: 6px;
+                background: ${color};
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 99999;
+                transform: translate(-50%, -50%);
+            `;
+            document.body.appendChild(particle);
+
+            const destX = x + Math.cos(angle) * velocity;
+            const destY = y + Math.sin(angle) * velocity;
+
+            particle.animate([
+                { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                { transform: `translate(${destX - x - 3}px, ${destY - y - 3}px) scale(0)`, opacity: 0 }
+            ], {
+                duration: 400 + Math.random() * 200,
+                easing: 'ease-out'
+            }).onfinish = () => particle.remove();
+        }
+    });
+}
+
+// --- CURSOR ---
+function initCursor() {
+    const cursor = window.CONFIG.cursor;
+    const hotspot = window.CONFIG.cursorHotspot || { x: 0, y: 0 };
+    const linkCursor = window.CONFIG.cursorLink;
+    const linkHotspot = window.CONFIG.cursorLinkHotspot || { x: 0, y: 0 };
+
+    // Main cursor
+    if (!cursor || cursor === 'default') {
+        document.body.style.cursor = 'default';
+    } else if (cursor.includes('<svg')) {
+        const encoded = encodeURIComponent(cursor).replace(/'/g, '%27').replace(/"/g, '%22');
+        document.body.style.cursor = `url('data:image/svg+xml;utf8,${encoded}') ${hotspot.x} ${hotspot.y}, auto`;
+    } else {
+        document.body.style.cursor = `url('${cursor}') ${hotspot.x} ${hotspot.y}, auto`;
+    }
+
+    // Link cursor
+    if (linkCursor && linkCursor !== 'default') {
+        const linkStyle = linkCursor.includes('<svg')
+            ? `url('data:image/svg+xml;utf8,${encodeURIComponent(linkCursor).replace(/'/g, '%27').replace(/"/g, '%22')}') ${linkHotspot.x} ${linkHotspot.y}, pointer`
+            : `url('${linkCursor}') ${linkHotspot.x} ${linkHotspot.y}, pointer`;
+
+        // More general selector including iziToast dynamically created elements
+        document.body.querySelectorAll('a, button, [onclick], .cursor-pointer, .iziToast, .iziToast *, [class*="iziToast"]').forEach(el => {
+            el.style.cursor = linkStyle;
+        });
+    }
+}
+
 // --- CONFIG INITIALIZATION ---
 function initConfig() {
     const config = window.CONFIG;
@@ -484,23 +638,55 @@ function initTypewriter() {
     const typeEl = document.getElementById('typewriter');
     let phraseIndex = 0, charIndex = 0, isDeleting = false, typeSpeed = 100;
 
+    // Check if mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+    let currentPrefix = '';
+
+    // Calculate available width and set prefix for mobile
+    function updatePrefix() {
+        if (!isMobile || !typeEl) return;
+        const containerWidth = typeEl.parentElement?.offsetWidth || 200;
+        const charWidth = 8; // approximate character width in px
+        const maxChars = Math.floor(containerWidth / charWidth) - 3; // -3 for "..."
+
+        if (maxChars < 10) {
+            currentPrefix = '...';
+        } else {
+            currentPrefix = '';
+        }
+    }
+
     function type() {
         if (!typeEl) return;
         const currentPhrase = phrases[phraseIndex];
+        let displayText;
+
         if (isDeleting) {
-            typeEl.textContent = currentPhrase.substring(0, charIndex - 1);
+            displayText = currentPhrase.substring(0, charIndex - 1);
             charIndex--; typeSpeed = 50;
         } else {
-            typeEl.textContent = currentPhrase.substring(0, charIndex + 1);
+            displayText = currentPhrase.substring(0, charIndex + 1);
             charIndex++; typeSpeed = 150;
         }
+
+        // Add prefix on mobile if phrase is too long
+        if (isMobile && displayText.length > 10) {
+            typeEl.textContent = currentPrefix + displayText;
+        } else {
+            typeEl.textContent = displayText;
+        }
+
         if (!isDeleting && charIndex === currentPhrase.length) {
             isDeleting = true; typeSpeed = 2000;
         } else if (isDeleting && charIndex === 0) {
-            isDeleting = false; phraseIndex = (phraseIndex + 1) % phrases.length; typeSpeed = 500;
+            isDeleting = false; phraseIndex = (phraseIndex + 1) % phrases.length;
+            typeSpeed = 500;
+            updatePrefix(); // Update prefix for new phrase
         }
         setTimeout(type, typeSpeed);
     }
+
+    updatePrefix();
     type();
 }
 
@@ -573,7 +759,21 @@ function handleCopyAction() {
     });
 }
 
+// Click animation
+function animateClick(el) {
+    el.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+        el.style.transform = 'scale(1)';
+    }, 100);
+}
+
 function copyDiscordNick() {
+    const el = document.getElementById('discord-card');
+    if (el) {
+        el.style.transform = 'scale(0.95)';
+        setTimeout(() => el.style.transform = 'scale(1)', 100);
+    }
+
     const copyId = window.CONFIG.discord.copy_id || "User";
     navigator.clipboard.writeText(copyId).then(() => {
         showToast({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2', timeout: 2000 });

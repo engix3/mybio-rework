@@ -74,8 +74,8 @@
             </div>
 
             <!-- Specs Button (visible on all devices, inside card) -->
-            <button id="mobile-specs-btn"
-                class="absolute top-3 right-3 z-20 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10 flex items-center gap-1.5 text-green-400 hover:bg-black/60 transition-all duration-300 cursor-pointer fade-in-stagger delay-300">
+            <button id="mobile-specs-btn" onclick="animateClick(this)"
+                class="absolute top-3 right-3 z-20 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10 flex items-center gap-1.5 text-green-400 hover:bg-black/60 transition-all duration-300 cursor-pointer fade-in-stagger delay-300 click-animate">
                 <i class="fa-solid fa-microchip text-xs"></i>
                 <span class="text-[10px] mono-font">SPECS</span>
             </button>
@@ -105,7 +105,7 @@
 
                 <!-- Discord Status -->
                 <div id="discord-card" onclick="copyDiscordNick()"
-                    class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-200 smart-hover transition cursor-pointer smart-group shadow-lg hidden relative active:scale-95 duration-200">
+                    class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-200 smart-hover transition cursor-pointer smart-group shadow-lg hidden relative active:scale-95 duration-200 click-scale">
                     <div
                         class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 smart-overlay transition duration-300 flex items-center justify-center rounded-xl z-20">
                         <span class="text-xs font-bold text-white tracking-widest uppercase"><i
@@ -221,27 +221,27 @@
             <div class="space-y-2 mono-font text-xs text-left">
                 <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
                     onclick="copySpec('cpu')">
-                    <span class="text-neutral-400">CPU</span>
+                    <span class="text-neutral-400"><i class="fa-solid fa-microchip w-4"></i> CPU</span>
                     <span class="text-green-400" id="mobile-spec-cpu">...</span>
                 </div>
                 <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
                     onclick="copySpec('gpu')">
-                    <span class="text-neutral-400">GPU</span>
+                    <span class="text-neutral-400"><i class="fa-solid fa-display w-4"></i> GPU</span>
                     <span class="text-green-400" id="mobile-spec-gpu">...</span>
                 </div>
                 <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
                     onclick="copySpec('ram')">
-                    <span class="text-neutral-400">RAM</span>
+                    <span class="text-neutral-400"><i class="fa-solid fa-memory w-4"></i> RAM</span>
                     <span class="text-green-400" id="mobile-spec-ram">...</span>
                 </div>
                 <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
                     onclick="copySpec('storage')">
-                    <span class="text-neutral-400">SSD</span>
+                    <span class="text-neutral-400"><i class="fa-solid fa-hard-drive w-4"></i> SSD</span>
                     <span class="text-green-400" id="mobile-spec-storage">...</span>
                 </div>
                 <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
                     onclick="copySpec('platform')">
-                    <span class="text-neutral-400">PLATFORM</span>
+                    <span class="text-neutral-400"><i class="fa-brands fa-windows w-4"></i> PLATFORM</span>
                     <span class="text-green-400" id="mobile-spec-platform">WINDOWS</span>
                 </div>
             </div>
