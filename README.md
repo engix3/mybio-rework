@@ -5,7 +5,7 @@
 [![Russian](https://img.shields.io/badge/lang-ru-red.svg?style=for-the-badge)](#)
 [![English](https://img.shields.io/badge/lang-en-blue.svg?style=for-the-badge)](https://github.com/engix3/mybio-rework/blob/main/README.en.md)
 
-![Preview](https://raw.githubusercontent.com/engix3/mybio-rework/refs/heads/main/screenshot.webp)
+![Preview](https://raw.githubusercontent.com/engix3/mybio-rework/refs/heads/main/screenshot.webp?20260214)
 
 > **Футуристичный био-хаб в стиле терминала.**  
 > Продвинутая интеграция с Discord и Last.fm, анимированные интерфейсы и кинематографичная атмосфера.
