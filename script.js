@@ -14,9 +14,12 @@ let currentTiltX = 0, currentTiltY = 0;
 let targetTiltX = 0, targetTiltY = 0;
 let initialGamma = 0, initialBeta = 0;
 let isMobile = false;
+let lastToastTime = 0;
+const TOAST_COOLDOWN = 1000; // 1 second cooldown
 
 // Initialize Services
 initConfig();
+initTechStats(); // Load specs immediately
 connectLanyard();
 
 // --- SYSTEM ENTRY ---
@@ -43,8 +46,6 @@ overlay.addEventListener('click', async () => {
     setTimeout(() => {
         overlay.style.display = 'none';
         mainContainer.classList.remove('hidden');
-        techStats.classList.remove('hidden');
-        techStats.classList.add('stats-enter-anim');
 
         if (bgMusic) {
             bgMusic.pause();
@@ -53,16 +54,12 @@ overlay.addEventListener('click', async () => {
 
         try { initTypewriter(); } catch (e) { }
         try { setGreeting(); } catch (e) { }
-        try { initTechStats(); } catch (e) { }
         try { updateLastFM(); } catch (e) { }
         try { initSpotlight(); } catch (e) { }
         initTooltips();
 
         setTimeout(() => {
             document.body.classList.add('intro-finished');
-            techStats.classList.remove('stats-enter-anim');
-            techStats.style.opacity = '';
-            techStats.style.transform = '';
         }, 1200);
     }, 800);
 });
@@ -81,28 +78,65 @@ function initSpotlight() {
 
 // --- TECH STATS ---
 function initTechStats() {
-    const ua = navigator.userAgent.toLowerCase();
-    const os = ua.includes("android") ? "ANDROID" : ua.includes("iphone") ? "IOS" : ua.includes("win") ? "WINDOWS" : ua.includes("mac") ? "MACOS" : "LINUX";
+    // Platform always WINDOWS
     const platEl = document.querySelector('#platform-display span');
-    if (platEl) platEl.textContent = os;
+    if (platEl) platEl.textContent = 'WINDOWS';
 
-    const fpsEl = document.getElementById('fps-counter');
-    let lastTime = performance.now(), frames = 0;
-    function loop() {
-        const now = performance.now();
-        frames++;
-        if (now - lastTime >= 1000) {
-            if (fpsEl) fpsEl.textContent = frames;
-            frames = 0; lastTime = now;
-        }
-        requestAnimationFrame(loop);
+    // Load system specs from config
+    const specs = window.CONFIG.system_specs;
+    if (specs) {
+        // Desktop Tech Stats
+        const cpuEl = document.querySelector('#spec-cpu span');
+        const gpuEl = document.querySelector('#spec-gpu span');
+        const ramEl = document.querySelector('#spec-ram span');
+        const storageEl = document.querySelector('#spec-storage span');
+
+        if (cpuEl) cpuEl.textContent = specs.cpu;
+        if (gpuEl) gpuEl.textContent = specs.gpu;
+        if (ramEl) ramEl.textContent = specs.ram;
+        if (storageEl) storageEl.textContent = specs.storage;
+
+        // Mobile Popup Specs
+        const mobileCpuEl = document.getElementById('mobile-spec-cpu');
+        const mobileGpuEl = document.getElementById('mobile-spec-gpu');
+        const mobileRamEl = document.getElementById('mobile-spec-ram');
+        const mobileStorageEl = document.getElementById('mobile-spec-storage');
+
+        if (mobileCpuEl) mobileCpuEl.textContent = specs.cpu;
+        if (mobileGpuEl) mobileGpuEl.textContent = specs.gpu;
+        if (mobileRamEl) mobileRamEl.textContent = specs.ram;
+        if (mobileStorageEl) mobileStorageEl.textContent = specs.storage;
+
+        // Platform
+        const platformEl = document.getElementById('mobile-spec-platform');
+        if (platformEl && specs.platform) platformEl.textContent = specs.platform;
     }
-    loop();
 
-    const pingEl = document.getElementById('ping-counter');
-    setInterval(() => {
-        if (pingEl) pingEl.textContent = Math.floor(Math.random() * (25 - 12 + 1) + 12);
-    }, 2000);
+    // Specs popup functionality
+    const mobileSpecsBtn = document.getElementById('mobile-specs-btn');
+    const mobileSpecsPopup = document.getElementById('mobile-specs-popup');
+    const mobileSpecsContent = document.getElementById('mobile-specs-content');
+    const closeSpecsPopup = document.getElementById('close-specs-popup');
+
+    if (mobileSpecsBtn && mobileSpecsPopup) {
+        const openPopup = () => {
+            mobileSpecsPopup.classList.remove('opacity-0', 'pointer-events-none');
+            mobileSpecsContent.classList.remove('scale-95');
+            mobileSpecsContent.classList.add('scale-100');
+        };
+
+        const closePopup = () => {
+            mobileSpecsPopup.classList.add('opacity-0', 'pointer-events-none');
+            mobileSpecsContent.classList.add('scale-95');
+            mobileSpecsContent.classList.remove('scale-100');
+        };
+
+        mobileSpecsBtn.addEventListener('click', openPopup);
+        closeSpecsPopup.addEventListener('click', closePopup);
+        mobileSpecsPopup.addEventListener('click', (e) => {
+            if (e.target === mobileSpecsPopup) closePopup();
+        });
+    }
 }
 
 // --- LAST.FM INTEGRATION ---
@@ -524,17 +558,25 @@ document.addEventListener('contextmenu', (e) => {
 
 document.addEventListener('click', () => { if (contextMenu) contextMenu.style.display = 'none'; });
 
+// Toast helper with spam protection
+function showToast(options) {
+    const now = Date.now();
+    if (now - lastToastTime < TOAST_COOLDOWN) return;
+    lastToastTime = now;
+    iziToast.show(options);
+}
+
 function handleCopyAction() {
     const url = linkToCopy || window.location.href;
     navigator.clipboard.writeText(url).then(() => {
-        iziToast.show({ theme: 'dark', icon: 'fa-solid fa-link', title: 'Link', message: 'Copied', position: 'topCenter', progressBarColor: '#00ff88', timeout: 2000 });
+        showToast({ theme: 'dark', icon: 'fa-solid fa-link', title: 'Link', message: 'Copied', position: 'topCenter', progressBarColor: '#00ff88', timeout: 2000 });
     });
 }
 
 function copyDiscordNick() {
     const copyId = window.CONFIG.discord.copy_id || "User";
     navigator.clipboard.writeText(copyId).then(() => {
-        iziToast.show({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2', timeout: 2000 });
+        showToast({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2', timeout: 2000 });
     });
 }
 
@@ -543,15 +585,31 @@ function copyLastFM() {
     const artist = document.getElementById('fm-artist').textContent;
     if (!song || song === "Searching..." || song === "No Data") return;
     navigator.clipboard.writeText(`${song} - ${artist}`).then(() => {
-        iziToast.show({ theme: 'dark', icon: 'fa-solid fa-music', title: 'Last.fm', message: 'Track name copied', position: 'topCenter', progressBarColor: '#b90000', timeout: 2000 });
+        showToast({ theme: 'dark', icon: 'fa-solid fa-music', title: 'Last.fm', message: 'Track name copied', position: 'topCenter', progressBarColor: '#b90000', timeout: 2000 });
     });
+}
+
+function copySpec(type) {
+    let value = '';
+    switch (type) {
+        case 'cpu': value = document.getElementById('mobile-spec-cpu').textContent; break;
+        case 'gpu': value = document.getElementById('mobile-spec-gpu').textContent; break;
+        case 'ram': value = document.getElementById('mobile-spec-ram').textContent; break;
+        case 'storage': value = document.getElementById('mobile-spec-storage').textContent; break;
+        case 'platform': value = window.CONFIG.system_specs?.platform || 'WINDOWS'; break;
+    }
+    if (value && value !== '...') {
+        navigator.clipboard.writeText(value).then(() => {
+            showToast({ theme: 'dark', icon: 'fa-solid fa-microchip', title: type.toUpperCase(), message: value + ' copied', position: 'topCenter', progressBarColor: '#22c55e', timeout: 2000 });
+        });
+    }
 }
 
 // --- REBOOT SYSTEM ---
 function triggerReboot() {
     if (contextMenu) contextMenu.style.display = 'none';
     mainContainer.classList.add('ui-hidden');
-    techStats.classList.add('ui-hidden');
+    if (techStats) techStats.classList.add('ui-hidden');
 
     const screen = document.getElementById('reboot-screen');
     const logs = document.getElementById('reboot-logs');
@@ -584,7 +642,7 @@ function triggerReboot() {
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Insert') {
         mainContainer.classList.toggle('ui-hidden');
-        techStats.classList.toggle('ui-hidden');
+        if (techStats) techStats.classList.toggle('ui-hidden');
         if (videoBg) {
             const vignette = document.getElementById('vignette');
             if (mainContainer.classList.contains('ui-hidden')) {

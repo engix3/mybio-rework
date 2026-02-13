@@ -91,5 +91,14 @@ window.CONFIG = {
     context_menu: {
         // Repository link
         source_code_url: "https://github.com/engix3/mybio-rework"
+    },
+
+    // System Specifications
+    system_specs: {
+        cpu: "AMD Ryzen 7 7745HX",
+        gpu: "NVIDIA GeForce RTX 4050 Laptop",
+        ram: "16GB DDR5 4800MHz",
+        storage: "512GB NVMe",
+        platform: "Windows 11 Pro"
     }
 };

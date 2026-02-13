@@ -60,16 +60,7 @@
         <source src="video/miyabi-fox-zenless-zone-zero-moewalls-com.mp4" type="video/mp4">
     </video>
 
-    <!-- Tech Stats -->
-    <div id="tech-stats"
-        class="fixed top-3 right-3 md:top-4 md:right-4 z-50 text-right mono-font text-[9px] md:text-[10px] text-green-500 opacity-80 pointer-events-none hidden flex flex-col items-end">
-        <div>FPS: <span id="fps-counter">60</span></div>
-        <div>PING: <span id="ping-counter">14</span>ms</div>
-        <div id="platform-display">PLATFORM: <span class="text-green-500">...</span></div>
 
-        <div class="hidden md:block h-px bg-white/20 w-full my-1"></div>
-        <div class="hidden md:block mt-1 text-green/50">HIDE MENU: <span class="text-green">INSERT</span></div>
-    </div>
 
     <!-- Main Card -->
     <div id="main-container"
@@ -81,6 +72,13 @@
                 class="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 z-0"
                 style="background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.15), transparent 40%);">
             </div>
+
+            <!-- Specs Button (visible on all devices, inside card) -->
+            <button id="mobile-specs-btn"
+                class="absolute top-3 right-3 z-20 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10 flex items-center gap-1.5 text-green-400 hover:bg-black/60 transition-all duration-300 cursor-pointer fade-in-stagger delay-300">
+                <i class="fa-solid fa-microchip text-xs"></i>
+                <span class="text-[10px] mono-font">SPECS</span>
+            </button>
 
             <div class="relative z-10 w-full flex flex-col items-center">
                 <!-- Avatar -->
@@ -202,6 +200,49 @@
                 <div id="social-links"
                     class="flex flex-wrap justify-center gap-3 mb-2 fade-in-stagger delay-400 max-w-[95%]">
                     <!-- Links will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Specs Popup -->
+    <div id="mobile-specs-popup"
+        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-card rounded-2xl p-5 max-w-xs w-full text-center relative transform scale-95 transition-all duration-300"
+            id="mobile-specs-content">
+            <button id="close-specs-popup"
+                class="absolute top-3 right-3 text-neutral-400 hover:text-white transition-colors cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-base font-bold text-white mb-3 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-microchip text-green-400"></i>
+                System Specs
+            </h3>
+            <div class="space-y-2 mono-font text-xs text-left">
+                <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
+                    onclick="copySpec('cpu')">
+                    <span class="text-neutral-400">CPU</span>
+                    <span class="text-green-400" id="mobile-spec-cpu">...</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
+                    onclick="copySpec('gpu')">
+                    <span class="text-neutral-400">GPU</span>
+                    <span class="text-green-400" id="mobile-spec-gpu">...</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
+                    onclick="copySpec('ram')">
+                    <span class="text-neutral-400">RAM</span>
+                    <span class="text-green-400" id="mobile-spec-ram">...</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
+                    onclick="copySpec('storage')">
+                    <span class="text-neutral-400">SSD</span>
+                    <span class="text-green-400" id="mobile-spec-storage">...</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
+                    onclick="copySpec('platform')">
+                    <span class="text-neutral-400">PLATFORM</span>
+                    <span class="text-green-400" id="mobile-spec-platform">WINDOWS</span>
                 </div>
             </div>
         </div>
