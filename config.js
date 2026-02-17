@@ -9,16 +9,19 @@ window.CONFIG = {
     // Cursor trail (follows cursor)
     cursorTrail: {
         enabled: true, // set true to enable
-        color: '#11ff00ff',
-        size: 6,
-        length: 12
+        color: '#00ff00',
+        size: 5,
+        length: 20,
+        smoothness: 0.25 // lower = smoother (0.05-0.3)
     },
 
     // Click effect (sparkles on click)
     cursorClickEffect: {
         enabled: true, // set true to enable
-        color: '#11ff00ff',
-        count: 6
+        color: '#00ff00', // multiple colors
+        count: 6,
+        sizeVariation: true, // random particle sizes
+        spread: true // random angles
     },
 
     // Page title shown in browser tab

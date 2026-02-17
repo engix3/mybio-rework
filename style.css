@@ -240,9 +240,7 @@ body.intro-finished .fade-in-stagger {
     transition: opacity 0.5s ease, transform 0.5s ease, visibility 0s linear 0.5s !important;
 }
 
-#main-container,
-#tech-stats,
-#footer-info {
+#main-container {
     opacity: 1;
     visibility: visible;
     transition: opacity 0.5s ease, transform 0.5s ease, visibility 0s linear 0s;
@@ -259,22 +257,8 @@ body.intro-finished .fade-in-stagger {
 
 #typewriter {
     color: #00ff00 !important;
-}
-
-/* Mobile typewriter fix - prevent line break and show ... prefix */
-@media (max-width: 640px) {
-    #typewriter {
-        display: inline-block;
-        max-width: 200px;
-        white-space: nowrap;
-        overflow: hidden;
-    }
-}
-
-@media (max-width: 480px) {
-    #typewriter {
-        max-width: 160px;
-    }
+    display: inline-block;
+    white-space: nowrap;
 }
 
 @keyframes blink {

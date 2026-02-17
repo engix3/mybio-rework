@@ -2,18 +2,17 @@ const DISCORD_ID = window.CONFIG.discord.user_id;
 const LASTFM_USERNAME = window.CONFIG.lastfm.username;
 const LASTFM_API_KEY = window.CONFIG.lastfm.api_key;
 
+// Detect mobile immediately (before any init functions)
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+
 const overlay = document.getElementById('overlay');
 const mainContainer = document.getElementById('main-container');
-const techStats = document.getElementById('tech-stats');
-const bgMusic = document.getElementById('bg-music');
-const enterSound = document.getElementById('enter-sound');
 const videoBg = document.getElementById('video-bg');
 
 let entered = false;
 let currentTiltX = 0, currentTiltY = 0;
 let targetTiltX = 0, targetTiltY = 0;
 let initialGamma = 0, initialBeta = 0;
-let isMobile = false;
 let lastToastTime = 0;
 const TOAST_COOLDOWN = 1000; // 1 second cooldown
 
@@ -30,17 +29,15 @@ overlay.addEventListener('click', async () => {
     if (entered) return;
     entered = true;
 
-    if (enterSound) {
-        enterSound.volume = 0.4;
-        enterSound.play().catch(() => { });
-    }
-
-    isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
-
-    if (isMobile) {
+    if (isMobileDevice) {
         const card = document.querySelector('.glass-card');
-        if (card && card.vanillaTilt) {
-            card.vanillaTilt.destroy();
+        if (card) {
+            // Destroy vanilla-tilt if it exists
+            if (card.vanillaTilt) {
+                card.vanillaTilt.destroy();
+            }
+            // Also remove data-tilt attributes to prevent re-initialization
+            card.removeAttribute('data-tilt');
         }
     }
 
@@ -49,11 +46,6 @@ overlay.addEventListener('click', async () => {
     setTimeout(() => {
         overlay.style.display = 'none';
         mainContainer.classList.remove('hidden');
-
-        if (bgMusic) {
-            bgMusic.pause();
-            bgMusic.currentTime = 0;
-        }
 
         try { initTypewriter(); } catch (e) { }
         try { setGreeting(); } catch (e) { }
@@ -72,7 +64,7 @@ function initSpotlight() {
     const card = document.querySelector('.glass-card');
     if (!card) return;
     card.addEventListener('mousemove', (e) => {
-        if (isMobile) return;
+        if (isMobileDevice) return;
         const rect = card.getBoundingClientRect();
         card.style.setProperty('--x', `${e.clientX - rect.left}px`);
         card.style.setProperty('--y', `${e.clientY - rect.top}px`);
@@ -81,24 +73,9 @@ function initSpotlight() {
 
 // --- TECH STATS ---
 function initTechStats() {
-    // Platform always WINDOWS
-    const platEl = document.querySelector('#platform-display span');
-    if (platEl) platEl.textContent = 'WINDOWS';
-
-    // Load system specs from config
+    // Load system specs from config for mobile popup
     const specs = window.CONFIG.system_specs;
     if (specs) {
-        // Desktop Tech Stats
-        const cpuEl = document.querySelector('#spec-cpu span');
-        const gpuEl = document.querySelector('#spec-gpu span');
-        const ramEl = document.querySelector('#spec-ram span');
-        const storageEl = document.querySelector('#spec-storage span');
-
-        if (cpuEl) cpuEl.textContent = specs.cpu;
-        if (gpuEl) gpuEl.textContent = specs.gpu;
-        if (ramEl) ramEl.textContent = specs.ram;
-        if (storageEl) storageEl.textContent = specs.storage;
-
         // Mobile Popup Specs
         const mobileCpuEl = document.getElementById('mobile-spec-cpu');
         const mobileGpuEl = document.getElementById('mobile-spec-gpu');
@@ -443,7 +420,7 @@ let trailInitialized = false;
 function initCursorTrail() {
     const trail = window.CONFIG.cursorTrail;
     if (!trail || !trail.enabled) return;
-    if (isMobile) return; // Disable on mobile
+    if (isMobileDevice) return; // Disable on mobile
 
     // Wait for "click to enter" before creating elements
     const checkAndCreate = () => {
@@ -462,27 +439,30 @@ function createTrail() {
     const trailColor = trail.color || '#00ff88';
     const trailSize = trail.size || 4;
     const trailLength = trail.length || 10;
+    const smoothness = trail.smoothness || 0.15;
     const container = document.body;
 
     for (let i = 0; i < trailLength; i++) {
         const el = document.createElement('div');
+        const size = trailSize * (1 - i / trailLength);
         el.style.cssText = `
             position: fixed;
-            width: ${trailSize - i * 0.3}px;
-            height: ${trailSize - i * 0.3}px;
+            width: ${size}px;
+            height: ${size}px;
             background: ${trailColor};
             border-radius: 50%;
             pointer-events: none;
             z-index: 99999;
             opacity: ${1 - i / trailLength};
-            transition: transform 0.1s ease-out;
+            will-change: transform;
+            transform: translate(-50%, -50%);
         `;
         container.appendChild(el);
-        trailElements.push(el);
+        trailElements.push({ el, x: 0, y: 0 });
     }
 
     let mouseX = 0, mouseY = 0;
-    const positions = Array(trailLength).fill({ x: 0, y: 0 });
+    const trailPositions = trailElements.map(() => ({ x: 0, y: 0 }));
 
     document.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
@@ -495,13 +475,23 @@ function createTrail() {
             return;
         }
 
-        positions.unshift({ x: mouseX, y: mouseY });
-        positions.pop();
+        // Smooth follow with lerp - first element follows cursor
+        trailPositions[0].x += (mouseX - trailPositions[0].x) * smoothness;
+        trailPositions[0].y += (mouseY - trailPositions[0].y) * smoothness;
 
-        trailElements.forEach((el, i) => {
-            const pos = positions[i + 1] || positions[i];
-            el.style.left = pos.x + 'px';
-            el.style.top = pos.y + 'px';
+        // Each subsequent element follows the previous one
+        for (let i = 1; i < trailLength; i++) {
+            const prev = trailPositions[i - 1];
+            const curr = trailPositions[i];
+            curr.x += (prev.x - curr.x) * smoothness;
+            curr.y += (prev.y - curr.y) * smoothness;
+        }
+
+        // Update element positions
+        trailElements.forEach((item, i) => {
+            const pos = trailPositions[i];
+            item.el.style.left = pos.x + 'px';
+            item.el.style.top = pos.y + 'px';
         });
 
         requestAnimationFrame(animate);
@@ -513,10 +503,12 @@ function createTrail() {
 function initClickEffect() {
     const effect = window.CONFIG.cursorClickEffect;
     if (!effect || !effect.enabled) return;
-    if (isMobile) return; // Disable on mobile
+    if (isMobileDevice) return; // Disable on mobile
 
-    const color = effect.color || '#00ff88';
+    const colors = effect.colors || ['#00ff88'];
     const count = effect.count || 8;
+    const sizeVariation = effect.sizeVariation !== false;
+    const spread = effect.spread !== false;
 
     document.addEventListener('click', (e) => {
         if (!entered) return; // Only show after "click to enter"
@@ -526,20 +518,32 @@ function initClickEffect() {
 
         for (let i = 0; i < count; i++) {
             const particle = document.createElement('div');
-            const angle = (Math.PI * 2 / count) * i;
-            const velocity = 50 + Math.random() * 50;
+            
+            // Random color from array
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Random size (4-8px)
+            const size = sizeVariation ? 4 + Math.random() * 4 : 6;
+            
+            // Angle with optional spread variation
+            const baseAngle = (Math.PI * 2 / count) * i;
+            const angle = spread ? baseAngle + (Math.random() - 0.5) * 0.5 : baseAngle;
+            
+            // Random velocity
+            const velocity = 40 + Math.random() * 60;
 
             particle.style.cssText = `
                 position: fixed;
                 left: ${x}px;
                 top: ${y}px;
-                width: 6px;
-                height: 6px;
+                width: ${size}px;
+                height: ${size}px;
                 background: ${color};
                 border-radius: 50%;
                 pointer-events: none;
                 z-index: 99999;
                 transform: translate(-50%, -50%);
+                box-shadow: 0 0 ${size}px ${color};
             `;
             document.body.appendChild(particle);
 
@@ -548,10 +552,10 @@ function initClickEffect() {
 
             particle.animate([
                 { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
-                { transform: `translate(${destX - x - 3}px, ${destY - y - 3}px) scale(0)`, opacity: 0 }
+                { transform: `translate(${destX - x}px, ${destY - y}px) scale(0) rotate(${Math.random() * 360}deg)`, opacity: 0 }
             ], {
-                duration: 400 + Math.random() * 200,
-                easing: 'ease-out'
+                duration: 500 + Math.random() * 300,
+                easing: 'cubic-bezier(0, .9, .57, 1)'
             }).onfinish = () => particle.remove();
         }
     });
@@ -616,6 +620,7 @@ function initConfig() {
             const a = document.createElement('a');
             a.href = link.url;
             a.target = "_blank";
+            a.rel = "noopener noreferrer";
             a.className = "group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]";
 
             if (link.icon) {
@@ -636,57 +641,105 @@ function initConfig() {
 function initTypewriter() {
     const phrases = window.CONFIG.typewriter_phrases || ["Into the Void"];
     const typeEl = document.getElementById('typewriter');
+    if (!typeEl) return;
+
     let phraseIndex = 0, charIndex = 0, isDeleting = false, typeSpeed = 100;
+    let scrollOffset = 0;
+    let pauseCount = 0;
+    const PAUSE_DURATION = 5; // Show full text for ~5 cycles (about 400ms)
 
-    // Check if mobile device
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
-    let currentPrefix = '';
+    // Check if mobile using CSS media query (works in devtools too)
+    function isMobileView() {
+        return window.matchMedia('(max-width: 640px)').matches;
+    }
 
-    // Calculate available width and set prefix for mobile
-    function updatePrefix() {
-        if (!isMobile || !typeEl) return;
-        const containerWidth = typeEl.parentElement?.offsetWidth || 200;
-        const charWidth = 8; // approximate character width in px
-        const maxChars = Math.floor(containerWidth / charWidth) - 3; // -3 for "..."
-
-        if (maxChars < 10) {
-            currentPrefix = '...';
-        } else {
-            currentPrefix = '';
-        }
+    // Get max characters for current screen width
+    function getMaxChars() {
+        if (!isMobileView()) return 100;
+        const width = window.innerWidth;
+        if (width < 380) return 15;
+        if (width < 480) return 18;
+        if (width < 640) return 22;
+        return 50;
     }
 
     function type() {
         if (!typeEl) return;
         const currentPhrase = phrases[phraseIndex];
+        const maxChars = getMaxChars();
         let displayText;
 
-        if (isDeleting) {
-            displayText = currentPhrase.substring(0, charIndex - 1);
-            charIndex--; typeSpeed = 50;
+        // On mobile with long phrases, use scrolling effect
+        if (isMobileView() && currentPhrase.length > maxChars) {
+            if (!isDeleting) {
+                // Type until we reach maxChars
+                if (charIndex < maxChars) {
+                    charIndex++;
+                    displayText = currentPhrase.substring(0, charIndex);
+                    typeSpeed = 150;
+                } else if (scrollOffset < currentPhrase.length - maxChars) {
+                    // Scroll through the text
+                    scrollOffset++;
+                    displayText = currentPhrase.substring(scrollOffset, scrollOffset + maxChars);
+                    typeSpeed = 100;
+                } else {
+                    // Pause at the end - keep showing the last view
+                    pauseCount++;
+                    displayText = currentPhrase.substring(scrollOffset, scrollOffset + maxChars);
+                    if (pauseCount >= PAUSE_DURATION) {
+                        isDeleting = true;
+                        pauseCount = 0;
+                    }
+                    typeSpeed = 100;
+                }
+            } else {
+                // Delete
+                if (scrollOffset > 0) {
+                    scrollOffset--;
+                    displayText = currentPhrase.substring(scrollOffset, scrollOffset + maxChars);
+                    typeSpeed = 100;
+                } else if (charIndex > 0) {
+                    charIndex--;
+                    displayText = currentPhrase.substring(0, charIndex);
+                    typeSpeed = 50;
+                } else {
+                    // Move to next phrase
+                    isDeleting = false;
+                    phraseIndex = (phraseIndex + 1) % phrases.length;
+                    scrollOffset = 0;
+                    charIndex = 0;
+                    pauseCount = 0;
+                    typeSpeed = 500;
+                }
+            }
         } else {
-            displayText = currentPhrase.substring(0, charIndex + 1);
-            charIndex++; typeSpeed = 150;
+            // Normal typing for desktop or short phrases
+            if (isDeleting) {
+                charIndex--;
+                typeSpeed = 50;
+                
+                if (charIndex === 0) {
+                    isDeleting = false;
+                    phraseIndex = (phraseIndex + 1) % phrases.length;
+                    typeSpeed = 500;
+                }
+            } else {
+                charIndex++;
+                typeSpeed = isMobileView() ? 100 : 150;
+            }
+
+            displayText = currentPhrase.substring(0, charIndex);
+
+            if (!isDeleting && charIndex >= currentPhrase.length) {
+                isDeleting = true;
+                typeSpeed = 2000;
+            }
         }
 
-        // Add prefix on mobile if phrase is too long
-        if (isMobile && displayText.length > 10) {
-            typeEl.textContent = currentPrefix + displayText;
-        } else {
-            typeEl.textContent = displayText;
-        }
-
-        if (!isDeleting && charIndex === currentPhrase.length) {
-            isDeleting = true; typeSpeed = 2000;
-        } else if (isDeleting && charIndex === 0) {
-            isDeleting = false; phraseIndex = (phraseIndex + 1) % phrases.length;
-            typeSpeed = 500;
-            updatePrefix(); // Update prefix for new phrase
-        }
+        typeEl.textContent = displayText;
         setTimeout(type, typeSpeed);
     }
 
-    updatePrefix();
     type();
 }
 
@@ -805,11 +858,33 @@ function copySpec(type) {
     }
 }
 
+function copyAllSpecs() {
+    const specs = window.CONFIG.system_specs;
+    if (!specs) return;
+    
+    const allText = `CPU: ${specs.cpu}
+GPU: ${specs.gpu}
+RAM: ${specs.ram}
+SSD: ${specs.storage}
+PLATFORM: ${specs.platform || 'WINDOWS'}`;
+    
+    navigator.clipboard.writeText(allText).then(() => {
+        showToast({ 
+            theme: 'dark', 
+            icon: 'fa-solid fa-copy', 
+            title: 'SPECS', 
+            message: 'All specs copied', 
+            position: 'topCenter', 
+            progressBarColor: '#22c55e', 
+            timeout: 2500 
+        });
+    });
+}
+
 // --- REBOOT SYSTEM ---
 function triggerReboot() {
     if (contextMenu) contextMenu.style.display = 'none';
     mainContainer.classList.add('ui-hidden');
-    if (techStats) techStats.classList.add('ui-hidden');
 
     const screen = document.getElementById('reboot-screen');
     const logs = document.getElementById('reboot-logs');
@@ -842,7 +917,6 @@ function triggerReboot() {
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Insert') {
         mainContainer.classList.toggle('ui-hidden');
-        if (techStats) techStats.classList.toggle('ui-hidden');
         if (videoBg) {
             const vignette = document.getElementById('vignette');
             if (mainContainer.classList.contains('ui-hidden')) {

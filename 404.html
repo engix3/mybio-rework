@@ -8,6 +8,12 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
 
+    <!-- Meta Tags -->
+    <meta name="robots" content="noindex, follow">
+
+    <!-- Preload Resources -->
+    <link rel="preload" href="image/bg-poster.webp" as="image">
+
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -101,7 +107,7 @@
             <i class="fa-solid fa-link text-xs w-5 text-center"></i>
             <span id="context-copy-text">Copy Link</span>
         </button>
-        <button class="menu-item" onclick="window.open('https://github.com/engix3/mybio-rework', '_blank')">
+        <button class="menu-item" onclick="window.open('https://github.com/engix3/mybio-rework', '_blank', 'noopener,noreferrer')">
             <i class="fa-brands fa-github text-xs w-5 text-center"></i> Source Code
         </button>
         <div class="h-[1px] bg-white/10 w-full my-0.5"></div>
@@ -117,6 +123,7 @@
         <div class="mt-1 animate-pulse text-green-400">_</div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
     <script>
         // Initialize the page with similar functionality to the main page
