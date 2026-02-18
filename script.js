@@ -233,6 +233,8 @@ setInterval(updateLastFM, 3000);
 let discordTimer = null;
 let currentActivityStart = null;
 let activityStateStr = "";
+let spotifyStart = null;
+let spotifyEnd = null;
 
 const statusColors = {
     online: "#23a559",
@@ -303,6 +305,10 @@ function updateStatus(data) {
     discordTimer = null;
     currentActivityStart = null;
     activityStateStr = "";
+    spotifyStart = null;
+    spotifyEnd = null;
+    lastActivityStateStr = "";
+    lastSpotifyArtists = "";
 
     let newTitleHTML = "";
     let newLargeImage = "";
@@ -311,15 +317,12 @@ function updateStatus(data) {
     let dotContent = "";
     let dotClass = "";
 
-    if (data.listening_to_spotify) {
-        newTitleHTML = '<span class="text-green-400 font-bold">Spotify</span>';
-        activityStateStr = `${data.spotify.song} - ${data.spotify.artist}`;
-        newLargeImage = data.spotify.album_art_url;
-        isSquareImage = true;
-        showDot = false;
-    }
-    else if (data.activities && data.activities.length > 0) {
-        const game = data.activities.find(a => a.type === 0) || data.activities[0];
+    // Games have priority over Spotify
+    const game = data.activities && data.activities.length > 0
+        ? data.activities.find(a => a.type === 0)
+        : null;
+
+    if (game) {
         newTitleHTML = `Playing <span class="text-white font-bold truncate">${game.name}</span>`;
 
         let largeIcon = game.assets?.large_image;
@@ -352,6 +355,22 @@ function updateStatus(data) {
             discordTimer = setInterval(updateGameString, 1000);
         }
     }
+    else if (data.listening_to_spotify) {
+        // Show "Listening" in gray + song name in white + green Spotify icon
+        newTitleHTML = `Listening <span class="text-white font-bold truncate">${data.spotify.song}</span> <i class="fa-brands fa-spotify text-green-400 text-[10px] ml-0.5"></i>`;
+        activityStateStr = data.spotify.artist;
+        newLargeImage = data.spotify.album_art_url;
+        isSquareImage = true;
+        showDot = false;
+
+        // Setup Spotify time tracking
+        if (data.spotify.timestamps) {
+            spotifyStart = data.spotify.timestamps.start;
+            spotifyEnd = data.spotify.timestamps.end;
+            updateSpotifyString();
+            discordTimer = setInterval(updateSpotifyString, 1000);
+        }
+    }
     else {
         newTitleHTML = data.discord_status.charAt(0).toUpperCase() + data.discord_status.slice(1);
         activityStateStr = "Chilling";
@@ -378,7 +397,7 @@ function updateStatus(data) {
         }, 200);
     }
 
-    if (!currentActivityStart) animateChange(subTextEl, activityStateStr, 'text');
+    if (!currentActivityStart && !spotifyStart) animateChange(subTextEl, activityStateStr, 'text');
 
     if (showDot) {
         statusDot.style.display = 'flex';
@@ -395,6 +414,8 @@ function updateStatus(data) {
     }
 }
 
+let lastActivityStateStr = "";
+
 function updateGameString() {
     const el = document.getElementById('discord-sub-text');
     if (!el || !currentActivityStart) return;
@@ -409,8 +430,55 @@ function updateGameString() {
         timeStr = `${hours > 0 ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} elapsed`;
     }
 
-    if (activityStateStr) el.innerHTML = `${activityStateStr} &bull; ${timeStr}`;
-    else el.textContent = timeStr;
+    const newContent = activityStateStr ? `${activityStateStr} &bull; ${timeStr}` : timeStr;
+
+    // Only animate if activity state changed (not just time)
+    if (lastActivityStateStr !== activityStateStr) {
+        lastActivityStateStr = activityStateStr;
+        el.style.opacity = '0';
+        setTimeout(() => {
+            el.innerHTML = newContent;
+            el.style.opacity = '1';
+        }, 200);
+    } else {
+        el.innerHTML = newContent;
+    }
+}
+
+let lastSpotifyArtists = "";
+
+function updateSpotifyString() {
+    const el = document.getElementById('discord-sub-text');
+    if (!el || !spotifyStart || !spotifyEnd) return;
+
+    const now = Date.now();
+    const elapsed = now - spotifyStart;
+    const total = spotifyEnd - spotifyStart;
+
+    // Format time as mm:ss
+    const formatTime = (ms) => {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    const elapsedStr = formatTime(elapsed);
+    const totalStr = formatTime(total);
+    const newContent = activityStateStr ? `${activityStateStr} &bull; ${elapsedStr} / ${totalStr}` : `${elapsedStr} / ${totalStr}`;
+
+    // Only animate if artists changed (not just time)
+    if (lastSpotifyArtists !== activityStateStr) {
+        lastSpotifyArtists = activityStateStr;
+        el.style.opacity = '0';
+        setTimeout(() => {
+            el.innerHTML = newContent;
+            el.style.opacity = '1';
+        }, 200);
+    } else {
+        // Just time update - no animation
+        el.innerHTML = newContent;
+    }
 }
 
 // --- CURSOR TRAIL ---
@@ -518,17 +586,17 @@ function initClickEffect() {
 
         for (let i = 0; i < count; i++) {
             const particle = document.createElement('div');
-            
+
             // Random color from array
             const color = colors[Math.floor(Math.random() * colors.length)];
-            
+
             // Random size (4-8px)
             const size = sizeVariation ? 4 + Math.random() * 4 : 6;
-            
+
             // Angle with optional spread variation
             const baseAngle = (Math.PI * 2 / count) * i;
             const angle = spread ? baseAngle + (Math.random() - 0.5) * 0.5 : baseAngle;
-            
+
             // Random velocity
             const velocity = 40 + Math.random() * 60;
 
@@ -717,7 +785,7 @@ function initTypewriter() {
             if (isDeleting) {
                 charIndex--;
                 typeSpeed = 50;
-                
+
                 if (charIndex === 0) {
                     isDeleting = false;
                     phraseIndex = (phraseIndex + 1) % phrases.length;
@@ -861,22 +929,22 @@ function copySpec(type) {
 function copyAllSpecs() {
     const specs = window.CONFIG.system_specs;
     if (!specs) return;
-    
+
     const allText = `CPU: ${specs.cpu}
 GPU: ${specs.gpu}
 RAM: ${specs.ram}
 SSD: ${specs.storage}
 PLATFORM: ${specs.platform || 'WINDOWS'}`;
-    
+
     navigator.clipboard.writeText(allText).then(() => {
-        showToast({ 
-            theme: 'dark', 
-            icon: 'fa-solid fa-copy', 
-            title: 'SPECS', 
-            message: 'All specs copied', 
-            position: 'topCenter', 
-            progressBarColor: '#22c55e', 
-            timeout: 2500 
+        showToast({
+            theme: 'dark',
+            icon: 'fa-solid fa-copy',
+            title: 'SPECS',
+            message: 'All specs copied',
+            position: 'topCenter',
+            progressBarColor: '#22c55e',
+            timeout: 2500
         });
     });
 }
