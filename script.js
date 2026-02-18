@@ -124,7 +124,84 @@ let lastSongName = "";
 let lastIsPlaying = null;
 let playingCounter = 0;
 
-async function findBestArt(artist, track, lastFmImage) {
+// --- ALBUM ART API HELPERS (Deezer via CORS proxy, MusicBrainz, iTunes) ---
+
+// CORS proxy for browser requests
+const CORS_PROXIES = [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url='
+];
+
+// Deezer API - requires CORS proxy for browser
+async function searchDeezerArt(artist, track) {
+    const query = `${artist} ${track}`;
+    const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=1`;
+
+    for (const proxy of CORS_PROXIES) {
+        try {
+            const res = await fetch(proxy + encodeURIComponent(deezerUrl));
+            const data = await res.json();
+            if (data.data && data.data.length > 0) {
+                const album = data.data[0].album;
+                if (album && album.cover_xl) {
+                    return album.cover_xl; // Highest quality (up to 1000x1000)
+                }
+                if (album && album.cover_big) {
+                    return album.cover_big; // 500x500
+                }
+            }
+        } catch (e) { }
+    }
+    return null;
+}
+
+// MusicBrainz API + Cover Art Archive - supports CORS
+async function searchMusicBrainzArt(artist, track) {
+    try {
+        // Search for recording
+        const query = `artist:"${artist}" AND recording:"${track}"`;
+        const res = await fetch(`https://musicbrainz.org/ws/2/recording/?query=${encodeURIComponent(query)}&fmt=json&limit=1`, {
+            headers: {
+                'User-Agent': 'MyBio/1.0 (https://github.com/engix3/mybio-rework)'
+            }
+        });
+        const data = await res.json();
+
+        if (data.recordings && data.recordings.length > 0) {
+            const recording = data.recordings[0];
+
+            // Get releases for this recording
+            if (recording.releases && recording.releases.length > 0) {
+                const releaseId = recording.releases[0].id;
+
+                // Get cover art from Cover Art Archive
+                const coverRes = await fetch(`https://coverartarchive.org/release/${releaseId}`, {
+                    headers: {
+                        'User-Agent': 'MyBio/1.0 (https://github.com/engix3/mybio-rework)'
+                    }
+                });
+
+                if (coverRes.ok) {
+                    const coverData = await coverRes.json();
+                    if (coverData.images && coverData.images.length > 0) {
+                        // Get front cover if available, otherwise first image
+                        const frontCover = coverData.images.find(img => img.front) || coverData.images[0];
+                        if (frontCover.thumbnails && frontCover.thumbnails.large) {
+                            return frontCover.thumbnails.large;
+                        }
+                        if (frontCover.image) {
+                            return frontCover.image;
+                        }
+                    }
+                }
+            }
+        }
+    } catch (e) { }
+    return null;
+}
+
+// iTunes API - supports CORS
+async function searchiTunesArt(artist, track) {
     try {
         const query = `${artist} ${track}`;
         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=1`);
@@ -133,6 +210,36 @@ async function findBestArt(artist, track, lastFmImage) {
             return data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
         }
     } catch (e) { }
+    return null;
+}
+
+// Try all sources in order of quality with timeout
+async function findBestArt(artist, track, lastFmImage) {
+    // Create a timeout promise
+    const timeout = (ms) => new Promise(resolve => setTimeout(() => resolve(null), ms));
+
+    // Try each source with a timeout
+    const tryWithTimeout = async (fn, ms = 2000) => {
+        try {
+            return await Promise.race([fn(), timeout(ms)]);
+        } catch {
+            return null;
+        }
+    };
+
+    // Try Deezer first (highest quality, up to 1000x1000)
+    const deezerArt = await tryWithTimeout(() => searchDeezerArt(artist, track), 2000);
+    if (deezerArt) return deezerArt;
+
+    // Try MusicBrainz + Cover Art Archive (variable quality)
+    const mbArt = await tryWithTimeout(() => searchMusicBrainzArt(artist, track), 3000);
+    if (mbArt) return mbArt;
+
+    // Fallback to iTunes (600x600)
+    const iTunesArt = await tryWithTimeout(() => searchiTunesArt(artist, track), 2000);
+    if (iTunesArt) return iTunesArt;
+
+    // Last resort: Last.fm image
     return lastFmImage || "";
 }
 
@@ -180,34 +287,35 @@ async function updateLastFM() {
             lastSongName = currentSongName;
             playingCounter = 0;
 
+            // Fade out for smooth transition
             infoContainer.style.opacity = '0';
             artEl.style.opacity = '0';
 
-            let rawLastFmArt = "";
-            if (track.image && track.image.length > 3 && track.image[3]['#text']) rawLastFmArt = track.image[3]['#text'];
-            else if (track.image && track.image.length > 2 && track.image[2]['#text']) rawLastFmArt = track.image[2]['#text'];
-
-            const isDefault = rawLastFmArt.includes("2a96cbd8b46e442fc41c2b86b821562f") || rawLastFmArt === "";
-            const artCandidate = isDefault ? null : rawLastFmArt;
-
-            const finalArtUrl = await findBestArt(currentArtist, currentSongName, artCandidate);
-
             setTimeout(() => {
+                // Show text with smooth animation
                 songTitleEl.textContent = currentSongName;
                 artistEl.textContent = currentArtist;
                 const vkSearchUrl = `https://vk.com/audio?q=${encodeURIComponent(currentSongName + " " + currentArtist)}`;
-
                 songLinkEl.href = vkSearchUrl;
                 if (linkEl) linkEl.href = vkSearchUrl;
-
-                if (finalArtUrl) {
-                    artEl.src = finalArtUrl;
-                    artEl.onload = () => { artEl.style.opacity = '1'; };
-                } else {
-                    artEl.style.opacity = '0';
-                }
                 infoContainer.style.opacity = '1';
-            }, 300);
+
+                // Load art asynchronously
+                let rawLastFmArt = "";
+                if (track.image && track.image.length > 3 && track.image[3]['#text']) rawLastFmArt = track.image[3]['#text'];
+                else if (track.image && track.image.length > 2 && track.image[2]['#text']) rawLastFmArt = track.image[2]['#text'];
+
+                const isDefault = rawLastFmArt.includes("2a96cbd8b46e442fc41c2b86b821562f") || rawLastFmArt === "";
+                const artCandidate = isDefault ? null : rawLastFmArt;
+
+                // Search for art in background
+                findBestArt(currentArtist, currentSongName, artCandidate).then(finalArtUrl => {
+                    if (finalArtUrl) {
+                        artEl.src = finalArtUrl;
+                        artEl.onload = () => { artEl.style.opacity = '1'; };
+                    }
+                });
+            }, 200);
         }
 
         if (lastIsPlaying !== finalIsPlaying) {
