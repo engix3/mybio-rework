@@ -124,34 +124,28 @@ let lastSongName = "";
 let lastIsPlaying = null;
 let playingCounter = 0;
 
-// --- ALBUM ART API HELPERS (Deezer via CORS proxy, MusicBrainz, iTunes) ---
+// --- ALBUM ART API HELPERS (Deezer via Vercel API, MusicBrainz, iTunes) ---
 
-// CORS proxy for browser requests
-const CORS_PROXIES = [
-    'https://corsproxy.io/?',
-    'https://api.allorigins.win/raw?url='
-];
-
-// Deezer API - requires CORS proxy for browser
+// Deezer API - via Vercel serverless function (no CORS issues)
 async function searchDeezerArt(artist, track) {
     const query = `${artist} ${track}`;
-    const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=1`;
 
-    for (const proxy of CORS_PROXIES) {
-        try {
-            const res = await fetch(proxy + encodeURIComponent(deezerUrl));
-            const data = await res.json();
-            if (data.data && data.data.length > 0) {
-                const album = data.data[0].album;
-                if (album && album.cover_xl) {
-                    return album.cover_xl; // Highest quality (up to 1000x1000)
-                }
-                if (album && album.cover_big) {
-                    return album.cover_big; // 500x500
-                }
+    try {
+        // Use Vercel API route for Deezer (no CORS issues)
+        const res = await fetch(`/api/deezer?q=${encodeURIComponent(query)}`);
+        if (!res.ok) return null;
+
+        const data = await res.json();
+        if (data.data && data.data.length > 0) {
+            const album = data.data[0].album;
+            if (album && album.cover_xl) {
+                return album.cover_xl; // Highest quality (up to 1000x1000)
             }
-        } catch (e) { }
-    }
+            if (album && album.cover_big) {
+                return album.cover_big; // 500x500
+            }
+        }
+    } catch (e) { }
     return null;
 }
 
