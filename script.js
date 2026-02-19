@@ -103,9 +103,41 @@ function initTechStats() {
             mobileSpecsPopup.classList.remove('opacity-0', 'pointer-events-none');
             mobileSpecsContent.classList.remove('scale-95');
             mobileSpecsContent.classList.add('scale-100');
+
+            // Animate title
+            const specTitle = mobileSpecsContent.querySelector('.spec-title');
+            if (specTitle) {
+                specTitle.classList.remove('visible');
+                setTimeout(() => specTitle.classList.add('visible'), 50);
+            }
+
+            // Staggered animation for spec rows
+            const specRows = mobileSpecsContent.querySelectorAll('.spec-row');
+            specRows.forEach((row, index) => {
+                row.classList.remove('visible');
+                setTimeout(() => {
+                    row.classList.add('visible');
+                }, 150 + index * 80);
+            });
+
+            // Animate copy button
+            const copyBtn = mobileSpecsContent.querySelector('.spec-copy-btn');
+            if (copyBtn) {
+                copyBtn.classList.remove('visible');
+                setTimeout(() => copyBtn.classList.add('visible'), 150 + specRows.length * 80 + 100);
+            }
         };
 
         const closePopup = () => {
+            // Hide all animated elements
+            const specTitle = mobileSpecsContent.querySelector('.spec-title');
+            const specRows = mobileSpecsContent.querySelectorAll('.spec-row');
+            const copyBtn = mobileSpecsContent.querySelector('.spec-copy-btn');
+
+            if (specTitle) specTitle.classList.remove('visible');
+            specRows.forEach(row => row.classList.remove('visible'));
+            if (copyBtn) copyBtn.classList.remove('visible');
+
             mobileSpecsPopup.classList.add('opacity-0', 'pointer-events-none');
             mobileSpecsContent.classList.add('scale-95');
             mobileSpecsContent.classList.remove('scale-100');
@@ -378,7 +410,6 @@ function updateStatus(data) {
     const cardAvatar = document.getElementById('discord-card-avatar');
     const statusDot = document.getElementById('discord-status-dot');
     const usernameEl = document.getElementById('discord-username');
-    const statusTextEl = document.getElementById('discord-status-text');
     const subTextEl = document.getElementById('discord-sub-text');
 
     if (!data.discord_user) return;
@@ -412,7 +443,9 @@ function updateStatus(data) {
     lastActivityStateStr = "";
     lastSpotifyArtists = "";
 
-    let newTitleHTML = "";
+    let newStatusPrefix = "";
+    let newStatusName = "";
+    let newStatusIcon = "";
     let newLargeImage = "";
     let isSquareImage = false;
     let showDot = true;
@@ -425,7 +458,9 @@ function updateStatus(data) {
         : null;
 
     if (game) {
-        newTitleHTML = `Playing <span class="text-white font-bold truncate">${game.name}</span>`;
+        newStatusPrefix = "Playing";
+        newStatusName = game.name;
+        newStatusIcon = "";
 
         let largeIcon = game.assets?.large_image;
         if (largeIcon?.startsWith('mp:')) largeIcon = largeIcon.replace('mp:', 'https://media.discordapp.net/');
@@ -459,7 +494,9 @@ function updateStatus(data) {
     }
     else if (data.listening_to_spotify) {
         // Show "Listening" in gray + song name in white + green Spotify icon
-        newTitleHTML = `Listening <span class="text-white font-bold truncate">${data.spotify.song}</span> <i class="fa-brands fa-spotify text-green-400 text-[10px] ml-0.5"></i>`;
+        newStatusPrefix = "Listening";
+        newStatusName = data.spotify.song;
+        newStatusIcon = `<i class="fa-brands fa-spotify text-green-400 text-[10px] ml-0.5"></i>`;
         activityStateStr = data.spotify.artist;
         newLargeImage = data.spotify.album_art_url;
         isSquareImage = true;
@@ -474,7 +511,9 @@ function updateStatus(data) {
         }
     }
     else {
-        newTitleHTML = data.discord_status.charAt(0).toUpperCase() + data.discord_status.slice(1);
+        newStatusPrefix = data.discord_status.charAt(0).toUpperCase() + data.discord_status.slice(1);
+        newStatusName = "";
+        newStatusIcon = "";
         activityStateStr = "Chilling";
         newLargeImage = userAvatarUrl;
         isSquareImage = false;
@@ -483,7 +522,14 @@ function updateStatus(data) {
         dotContent = "";
     }
 
-    animateChange(statusTextEl, newTitleHTML, 'html');
+    // Update status text elements
+    const statusPrefixEl = document.getElementById('discord-status-prefix');
+    const statusNameEl = document.getElementById('discord-status-name');
+    const statusIconEl = document.getElementById('discord-status-icon');
+
+    animateChange(statusPrefixEl, newStatusPrefix, 'text');
+    animateChange(statusNameEl, newStatusName, 'text');
+    animateChange(statusIconEl, newStatusIcon, 'html');
 
     const avatarClass = isSquareImage
         ? "w-10 h-10 object-cover rounded-md transition-all duration-500 ease-in-out"
@@ -785,20 +831,40 @@ function initConfig() {
 
     const socialContainer = document.getElementById('social-links');
     if (socialContainer && config.social_links) {
+        // Default neon color if not specified for individual link
+        const defaultNeonColor = '#00ff00';
+        // Convert hex to rgba for glow
+        const hexToRgba = (hex, alpha) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+
         const fragment = document.createDocumentFragment();
         config.social_links.forEach(link => {
             const a = document.createElement('a');
             a.href = link.url;
             a.target = "_blank";
             a.rel = "noopener noreferrer";
-            a.className = "group relative w-10 h-10 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]";
+
+            // Use individual neon color or default
+            const neonColor = link.neonColor || defaultNeonColor;
+            const neonGlow = hexToRgba(neonColor, 0.6);
+
+            a.className = "social-link group relative w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:border-transparent";
+            a.style.setProperty('--brand-color', neonColor);
+            a.style.setProperty('--brand-glow', neonGlow);
 
             if (link.icon) {
                 const i = document.createElement('i');
-                i.className = `${link.icon} text-2xl transition-transform duration-300 scale-75 group-hover:scale-[0.9] inline-block`;
+                i.className = `${link.icon} text-xl transition-all duration-300 opacity-70 group-hover:opacity-100 text-white`;
                 a.appendChild(i);
             } else if (link.svg) {
-                a.innerHTML = link.svg;
+                const wrapper = document.createElement('span');
+                wrapper.className = 'transition-all duration-300 opacity-70 group-hover:opacity-100';
+                wrapper.innerHTML = link.svg;
+                a.appendChild(wrapper);
             }
             fragment.appendChild(a);
         });
@@ -1014,16 +1080,33 @@ function copyLastFM() {
 
 function copySpec(type) {
     let value = '';
+    let icon = 'fa-solid fa-microchip';
+
     switch (type) {
-        case 'cpu': value = document.getElementById('mobile-spec-cpu').textContent; break;
-        case 'gpu': value = document.getElementById('mobile-spec-gpu').textContent; break;
-        case 'ram': value = document.getElementById('mobile-spec-ram').textContent; break;
-        case 'storage': value = document.getElementById('mobile-spec-storage').textContent; break;
-        case 'platform': value = window.CONFIG.system_specs?.platform || 'WINDOWS'; break;
+        case 'cpu':
+            value = document.getElementById('mobile-spec-cpu').textContent;
+            icon = 'fa-solid fa-microchip';
+            break;
+        case 'gpu':
+            value = document.getElementById('mobile-spec-gpu').textContent;
+            icon = 'fa-solid fa-display';
+            break;
+        case 'ram':
+            value = document.getElementById('mobile-spec-ram').textContent;
+            icon = 'fa-solid fa-memory';
+            break;
+        case 'storage':
+            value = document.getElementById('mobile-spec-storage').textContent;
+            icon = 'fa-solid fa-hard-drive';
+            break;
+        case 'platform':
+            value = window.CONFIG.system_specs?.platform || 'WINDOWS';
+            icon = 'fa-brands fa-windows';
+            break;
     }
     if (value && value !== '...') {
         navigator.clipboard.writeText(value).then(() => {
-            showToast({ theme: 'dark', icon: 'fa-solid fa-microchip', title: type.toUpperCase(), message: value + ' copied', position: 'topCenter', progressBarColor: '#22c55e', timeout: 2000 });
+            showToast({ theme: 'dark', icon: icon, title: type.toUpperCase(), message: value + ' copied', position: 'topCenter', progressBarColor: '#22c55e', timeout: 2000 });
         });
     }
 }

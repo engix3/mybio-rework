@@ -298,6 +298,20 @@ body.intro-finished .fade-in-stagger {
     white-space: nowrap;
 }
 
+/* Discord status text truncation */
+#discord-status-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+#discord-sub-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Click scale animation */
 .click-scale,
 .click-animate {
@@ -439,6 +453,95 @@ body .iziToast-wrapper .iziToast-body p {
     animation: statsSlideIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
+/* --- SPECS POPUP ANIMATIONS --- */
+
+/* Staggered slide-in for spec rows */
+.spec-row {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.spec-row.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Hover neon effect for spec rows */
+.spec-row {
+    position: relative;
+    --spec-glow: rgba(0, 255, 0, 0.4);
+}
+
+.spec-row::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow:
+        0 0 15px var(--spec-glow),
+        inset 0 0 10px var(--spec-glow);
+    pointer-events: none;
+}
+
+@media (hover: hover) {
+    .spec-row:hover::before {
+        opacity: 1;
+    }
+
+    .spec-row:hover {
+        background: rgba(0, 255, 0, 0.05) !important;
+        border-color: rgba(0, 255, 0, 0.3);
+    }
+
+    .spec-row:hover .spec-icon {
+        animation: none;
+        filter: drop-shadow(0 0 10px currentColor);
+        transform: scale(1.1);
+    }
+
+    .spec-row:hover .spec-value {
+        text-shadow: 0 0 10px currentColor;
+    }
+}
+
+.spec-icon {
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.spec-value {
+    transition: text-shadow 0.3s ease;
+}
+
+/* Spec title animation */
+.spec-title {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.spec-title.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Copy button animation */
+.spec-copy-btn {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.spec-copy-btn.visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+.spec-copy-btn:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    text-shadow: 0 0 10px currentColor;
+}
+
 /* --- AVATAR BORDER EFFECTS --- */
 
 @property --border-color-1 {
@@ -542,5 +645,107 @@ body .iziToast-wrapper .iziToast-body p {
 
     100% {
         background-position: 0% 50%;
+    }
+}
+
+/* --- SOCIAL LINKS NEON EFFECT --- */
+
+.social-link {
+    --brand-color: #ffffff;
+    --brand-glow: rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: visible;
+    box-shadow: none;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.social-link::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--brand-color);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: -1;
+}
+
+.social-link::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    background: transparent;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: -2;
+    box-shadow:
+        0 0 15px var(--brand-glow),
+        0 0 30px var(--brand-glow),
+        0 0 45px var(--brand-glow);
+}
+
+@media (hover: hover) {
+    .social-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow:
+            0 0 20px var(--brand-glow),
+            0 0 40px var(--brand-glow),
+            inset 0 0 15px var(--brand-glow);
+        border-color: var(--brand-color);
+    }
+
+    .social-link:hover::before {
+        opacity: 0.15;
+    }
+
+    .social-link:hover i,
+    .social-link:hover svg {
+        filter: drop-shadow(0 0 8px var(--brand-color));
+        transform: scale(1.1);
+    }
+}
+
+/* Pulse animation on hover */
+.social-link:hover {
+    animation: neon-pulse 1.5s ease-in-out infinite;
+}
+
+/* SVG icons transition */
+.social-link svg {
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+@keyframes neon-pulse {
+
+    0%,
+    100% {
+        box-shadow:
+            0 0 20px var(--brand-glow),
+            0 0 40px var(--brand-glow),
+            inset 0 0 15px var(--brand-glow);
+    }
+
+    50% {
+        box-shadow:
+            0 0 25px var(--brand-glow),
+            0 0 50px var(--brand-glow),
+            inset 0 0 20px var(--brand-glow);
+    }
+}
+
+/* Mobile social links - smaller size */
+@media (max-width: 480px) {
+    .social-link {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+
+    .social-link i {
+        font-size: 1.2rem !important;
+    }
+
+    #social-links {
+        gap: 0.7rem !important;
     }
 }
