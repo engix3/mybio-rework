@@ -432,6 +432,27 @@ function updateStatus(data) {
     }
 
     if (usernameEl) usernameEl.textContent = user.global_name || user.username;
+
+    // Update Discord tag from Lanyard API (primary_guild)
+    const tagEl = document.getElementById('discord-tag');
+    const tagIconEl = document.getElementById('discord-tag-icon');
+    const tagTextEl = document.getElementById('discord-tag-text');
+    if (tagEl && user.primary_guild && user.primary_guild.tag) {
+        if (tagTextEl) tagTextEl.textContent = user.primary_guild.tag;
+        tagEl.style.display = 'inline-flex';
+
+        // Add guild badge icon if available
+        if (tagIconEl && user.primary_guild.badge) {
+            const badgeUrl = `https://cdn.discordapp.com/guild-tag-badges/${user.primary_guild.identity_guild_id}/${user.primary_guild.badge}.png?size=64`;
+            tagIconEl.innerHTML = `<img src="${badgeUrl}" class="w-3 h-3 rounded-sm object-cover" alt="">`;
+            tagIconEl.style.display = 'flex';
+        } else if (tagIconEl) {
+            tagIconEl.style.display = 'none';
+        }
+    } else if (tagEl) {
+        tagEl.style.display = 'none';
+    }
+
     if (discordCard) discordCard.classList.remove('hidden');
 
     if (discordTimer) clearInterval(discordTimer);

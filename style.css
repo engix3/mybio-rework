@@ -749,3 +749,43 @@ body .iziToast-wrapper .iziToast-body p {
         gap: 0.7rem !important;
     }
 }
+
+/* --- DISCORD SERVER TAG --- */
+
+.discord-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 16px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    line-height: 1;
+    color: #dbdee1;
+    background: #1e1f22;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    vertical-align: middle;
+    transition: all 0.2s ease;
+}
+
+.discord-tag-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.discord-tag-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
