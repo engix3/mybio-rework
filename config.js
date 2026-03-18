@@ -8,20 +8,20 @@ window.CONFIG = {
 
     // Cursor trail (follows cursor)
     cursorTrail: {
-        enabled: true, // set true to enable
+        enabled: true,
         color: '#00ff00',
         size: 5,
         length: 20,
-        smoothness: 0.25 // lower = smoother (0.05-0.3)
+        smoothness: 0.25
     },
 
     // Click effect (sparkles on click)
     cursorClickEffect: {
-        enabled: true, // set true to enable
-        color: '#00ff00', // multiple colors
+        enabled: true,
+        color: '#00ff00',
         count: 6,
-        sizeVariation: true, // random particle sizes
-        spread: true // random angles
+        sizeVariation: true,
+        spread: true
     },
 
     // Page title shown in browser tab
@@ -41,16 +41,11 @@ window.CONFIG = {
 
     // Background settings
     background: {
-        // Static image shown while video is loading
         poster: "image/bg-poster.webp",
-        // Main video background file path
-        video: "video/Ellen-Joe-Zenless-Zone-Zero-getlivewall-com.mp4"
+        video: "video/hatsune-miku-nostalgic-night-moewalls-com.mp4"
     },
 
     // Social Links
-    // icon: FontAwesome class (e.g. "fa-brands fa-discord")
-    // svg: Raw SVG code if icon is not available
-    // neonColor: Custom neon glow color (optional, defaults to green)
     social_links: [
         {
             name: "Discord",
@@ -108,23 +103,32 @@ window.CONFIG = {
         }
     ],
 
+    // Projects popup
+    projects: [
+        {
+            enabled: true,
+            title: "engi vpn",
+            description: "Мой собственный VPN-сервис для стабильного и удобного доступа без лишнего шума.",
+            icon: "image/vpn-icon.png",
+            link_text: "Телеграм-бот",
+            url: "https://t.me/engivpn_bot",
+            secondary_link_text: "Личный кабинет",
+            secondary_url: "https://nodeengivpn.nya.pub"
+        }
+    ],
+
     // Integrations
     discord: {
-        // Numeric Discord ID for Lanyard
         user_id: "1257675618175422576",
-        // ID that gets copied when clicking the Discord card
         copy_id: "engi4"
     },
     lastfm: {
-        // Last.fm username for music tracking
         username: "engi2",
-        // Last.fm API Key
         api_key: "d150e3e4d37438b5a18bb0f942f3275a"
     },
 
     // Context Menu
     context_menu: {
-        // Repository link
         source_code_url: "https://github.com/engix3/mybio-rework"
     },
 

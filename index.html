@@ -119,40 +119,42 @@
 
                 <!-- Discord Status -->
                 <div id="discord-card" onclick="copyDiscordNick()"
-                    class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-200 smart-hover transition cursor-pointer smart-group shadow-lg hidden relative active:scale-95 duration-200 click-scale"
+                    class="w-full bg-black/20 backdrop-blur-sm rounded-xl p-3 mb-6 border border-white/5 flex gap-3 items-center text-left fade-in-stagger delay-200 smart-hover-bg transition duration-500 cursor-pointer smart-group shadow-lg hidden relative active:scale-95 click-scale"
                     role="button" aria-label="Copy Discord ID" tabindex="0">
                     <div
-                        class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 smart-overlay transition duration-300 flex items-center justify-center rounded-xl z-20">
+                        class="absolute inset-0 bg-black/10 backdrop-blur-md opacity-0 smart-overlay transition duration-300 flex items-center justify-center rounded-xl z-20">
                         <span class="text-xs font-bold text-white tracking-widest uppercase"><i
                                 class="fa-regular fa-copy mr-2"></i>Copy ID</span>
                     </div>
 
-                    <div class="relative shrink-0 z-10">
-                        <img id="discord-card-avatar" src=""
-                            class="w-10 h-10 rounded-full object-cover bg-neutral-800 smooth-all" alt="Discord Avatar">
-                        <div id="discord-status-dot"
-                            class="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-[2px] border-[#111] bg-gray-500 transition-all duration-300 flex items-center justify-center overflow-hidden">
+                    <div class="discord-content relative z-10 w-full flex gap-3 items-center">
+                        <div class="relative shrink-0">
+                            <img id="discord-card-avatar" src=""
+                                class="w-10 h-10 rounded-full object-cover bg-neutral-800 smooth-all" alt="Discord Avatar">
+                            <div id="discord-status-dot"
+                                class="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-[2px] border-black/30 bg-gray-500 transition-all duration-300 flex items-center justify-center overflow-hidden">
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="overflow-hidden w-full flex flex-col justify-center z-10">
-                        <div class="text-sm font-bold text-white truncate leading-tight flex items-center gap-1.5">
-                            <span id="discord-username" class="truncate smooth-all cyrillic-font">User</span>
-                            <span id="discord-tag" class="discord-tag" style="display: none;">
-                                <span id="discord-tag-icon" class="discord-tag-icon"></span>
-                                <span id="discord-tag-text"></span>
-                            </span>
-                            <i class="fa-brands fa-discord text-[10px] text-[#5865F2] ml-0.5 shrink-0"
-                                title="Discord User"></i>
+                        <div class="overflow-hidden w-full flex flex-col justify-center">
+                            <div class="text-sm font-bold text-white truncate leading-tight flex items-center gap-1.5">
+                                <span id="discord-username" class="truncate smooth-all cyrillic-font">User</span>
+                                <span id="discord-tag" class="discord-tag" style="display: none;">
+                                    <span id="discord-tag-icon" class="discord-tag-icon"></span>
+                                    <span id="discord-tag-text"></span>
+                                </span>
+                                <i class="fa-brands fa-discord text-[10px] text-[#5865F2] ml-0.5 shrink-0"
+                                    title="Discord User"></i>
+                            </div>
+                            <div class="text-[11px] text-neutral-400 leading-none mt-0.5 w-full smooth-all cyrillic-font flex items-center gap-1"
+                                id="discord-status-text">
+                                <span id="discord-status-prefix" class="shrink-0">Loading...</span>
+                                <span id="discord-status-name" class="text-white font-bold truncate min-w-0"></span>
+                                <i id="discord-status-icon" class="shrink-0"></i>
+                            </div>
+                            <div class="text-[10px] text-neutral-400 font-medium truncate leading-none w-full smooth-all cyrillic-font"
+                                id="discord-sub-text"></div>
                         </div>
-                        <div class="text-[11px] text-neutral-400 leading-none mt-0.5 w-full smooth-all cyrillic-font flex items-center gap-1"
-                            id="discord-status-text">
-                            <span id="discord-status-prefix" class="shrink-0">Loading...</span>
-                            <span id="discord-status-name" class="text-white font-bold truncate min-w-0"></span>
-                            <i id="discord-status-icon" class="shrink-0"></i>
-                        </div>
-                        <div class="text-[10px] text-neutral-400 font-medium truncate leading-none w-full smooth-all cyrillic-font"
-                            id="discord-sub-text"></div>
                     </div>
                 </div>
 
@@ -221,6 +223,15 @@
                     class="flex flex-wrap justify-center gap-3 mb-2 fade-in-stagger delay-400 max-w-[95%]">
                     <!-- Links will be injected here -->
                 </div>
+
+                <div class="w-full flex justify-center mt-4 fade-in-stagger delay-400">
+                    <button id="projects-btn" onclick="animateClick(this)"
+                        class="projects-btn click-animate hidden"
+                        aria-label="Open projects">
+                        <i class="fa-solid fa-folder-tree text-[11px]"></i>
+                        <span>Projects</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -277,6 +288,23 @@
                 <i class="fa-regular fa-copy"></i>
                 <span>COPY ALL SPECS</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Projects Popup -->
+    <div id="projects-popup"
+        class="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+        <div id="projects-content"
+            class="glass-card rounded-2xl p-5 max-w-sm w-full relative transform scale-95 transition-all duration-300 text-left">
+            <button id="close-projects-popup"
+                class="absolute top-3 right-3 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                aria-label="Close projects panel">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <h3 class="projects-popup-title">My Projects</h3>
+
+            <div id="projects-list" class="projects-list"></div>
         </div>
     </div>
 

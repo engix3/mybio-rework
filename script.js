@@ -52,6 +52,7 @@ overlay.addEventListener('click', async () => {
         try { updateLastFM(); } catch (e) { }
         try { initSpotlight(); } catch (e) { }
         initTooltips();
+        initProjectsPopup();
 
         setTimeout(() => {
             document.body.classList.add('intro-finished');
@@ -892,6 +893,82 @@ function initConfig() {
         socialContainer.innerHTML = '';
         socialContainer.appendChild(fragment);
     }
+
+    initProjects(config.projects);
+}
+
+function initProjects(projectsConfig) {
+    const button = document.getElementById('projects-btn');
+    const list = document.getElementById('projects-list');
+
+    if (!button || !list || !Array.isArray(projectsConfig) || projectsConfig.length === 0) return;
+
+    const fragment = document.createDocumentFragment();
+
+    projectsConfig
+        .filter(project => project && project.enabled !== false)
+        .forEach(project => {
+            const item = document.createElement('div');
+            item.className = 'project-item';
+            const projectIcon = project.icon
+                ? `<img src="${project.icon}" alt="${project.title || 'Project'} icon" class="project-item-icon">`
+                : `<div class="project-item-icon-fallback"><i class="fa-solid fa-shield-halved text-[13px]"></i></div>`;
+            item.innerHTML = `
+                <div class="project-item-inner">
+                    <div class="project-item-header">
+                        ${projectIcon}
+                        <h4 class="project-item-title">${project.title || 'Project'}</h4>
+                    </div>
+                    <p class="project-item-description">${project.description || ''}</p>
+                    <div class="project-item-actions">
+                        <a href="${project.url || '#'}" target="_blank" rel="noopener noreferrer" class="project-item-link" ${project.url ? '' : 'style="display:none;"'}>
+                            <span>${project.link_text || 'Open project'}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                        <a href="${project.secondary_url || '#'}" target="_blank" rel="noopener noreferrer" class="project-item-link secondary" ${project.secondary_url ? '' : 'style="display:none;"'}>
+                            <span>${project.secondary_link_text || 'More'}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+            `;
+            fragment.appendChild(item);
+        });
+
+    if (!fragment.childNodes.length) return;
+
+    list.innerHTML = '';
+    list.appendChild(fragment);
+    button.classList.remove('hidden');
+}
+
+function initProjectsPopup() {
+    const button = document.getElementById('projects-btn');
+    const popup = document.getElementById('projects-popup');
+    const content = document.getElementById('projects-content');
+    const close = document.getElementById('close-projects-popup');
+
+    if (!button || !popup || !content || !close || button.dataset.bound === 'true') return;
+
+    const openPopup = () => {
+        popup.classList.remove('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    };
+
+    const closePopup = () => {
+        popup.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.add('scale-95');
+        content.classList.remove('scale-100');
+    };
+
+    button.addEventListener('click', openPopup);
+    close.addEventListener('click', closePopup);
+    popup.addEventListener('click', (e) => {
+        if (e.target === popup) closePopup();
+    });
+
+    button.dataset.bound = 'true';
 }
 
 // --- UTILS ---
