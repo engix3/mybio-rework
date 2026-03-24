@@ -86,6 +86,11 @@
                 style="background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.15), transparent 40%);">
             </div>
 
+            <div
+                class="absolute top-4 left-4 z-20 text-[10px] text-neutral-600 mono-font tracking-[0.2em] select-none fade-in-stagger delay-300">
+                [INS]
+            </div>
+
             <!-- Specs Button (visible on all devices, inside card) -->
             <button id="mobile-specs-btn" onclick="animateClick(this)"
                 class="absolute top-3 right-3 z-20 px-2 py-1 rounded-lg bg-black/20 backdrop-blur-sm border border-white/10 flex items-center gap-1.5 text-green-400 hover:bg-black/40 transition-all duration-300 cursor-pointer fade-in-stagger delay-300 click-animate"
@@ -115,6 +120,15 @@
                 </div>
 
                 <div id="time-greeting" class="text-[10px] text-neutral-500 mb-6 mono-font fade-in-stagger delay-100">
+                </div>
+
+                <div class="w-full flex justify-center mb-4 fade-in-stagger delay-200">
+                    <button id="projects-btn" onclick="animateClick(this)"
+                        class="projects-btn click-animate hidden"
+                        aria-label="Open projects">
+                        <i class="fa-solid fa-diagram-project text-[11px]"></i>
+                        <span>Projects</span>
+                    </button>
                 </div>
 
                 <!-- Discord Status -->
@@ -223,15 +237,6 @@
                     class="flex flex-wrap justify-center gap-3 mb-2 fade-in-stagger delay-400 max-w-[95%]">
                     <!-- Links will be injected here -->
                 </div>
-
-                <div class="w-full flex justify-center mt-4 fade-in-stagger delay-400">
-                    <button id="projects-btn" onclick="animateClick(this)"
-                        class="projects-btn click-animate hidden"
-                        aria-label="Open projects">
-                        <i class="fa-solid fa-folder-tree text-[11px]"></i>
-                        <span>Projects</span>
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -283,8 +288,8 @@
                 </div>
             </div>
             <!-- Copy All Button -->
-            <button onclick="copyAllSpecs()"
-                class="spec-copy-btn mt-4 w-full py-2 px-4 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 rounded-lg text-green-400 text-xs mono-font transition-all duration-300 flex items-center justify-center gap-2 opacity-0 translate-y-2">
+            <button onclick="animateClick(this); copyAllSpecs()"
+                class="spec-copy-btn click-animate mt-4 w-full py-2.5 px-4 rounded-xl text-xs mono-font transition-all duration-300 flex items-center justify-center gap-2">
                 <i class="fa-regular fa-copy"></i>
                 <span>COPY ALL SPECS</span>
             </button>

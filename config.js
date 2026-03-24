@@ -107,7 +107,7 @@ window.CONFIG = {
     projects: [
         {
             enabled: true,
-            title: "engi vpn",
+            title: "engivpn",
             description: "Мой собственный VPN-сервис для стабильного и удобного доступа без лишнего шума.",
             icon: "image/vpn-icon.png",
             link_text: "Телеграм-бот",

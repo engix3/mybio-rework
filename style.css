@@ -324,6 +324,24 @@ body.intro-finished .fade-in-stagger {
     transition: transform 0.1s ease-out !important;
 }
 
+.click-press {
+    animation: click-press 0.16s ease-out;
+}
+
+@keyframes click-press {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.94);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
 .neon-pulse {
     color: #fff;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.2), 0 0 10px rgba(255, 255, 255, 0.2);
@@ -473,10 +491,10 @@ body .iziToast-wrapper .iziToast-body p {
     transform: translateX(0);
 }
 
-/* Hover neon effect for spec rows */
+/* Hover styling for spec rows */
 .spec-row {
     position: relative;
-    --spec-glow: rgba(0, 255, 0, 0.4);
+    overflow: hidden;
 }
 
 .spec-row::before {
@@ -486,30 +504,34 @@ body .iziToast-wrapper .iziToast-body p {
     border-radius: inherit;
     opacity: 0;
     transition: opacity 0.3s ease;
-    box-shadow:
-        0 0 15px var(--spec-glow),
-        inset 0 0 10px var(--spec-glow);
+    background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 35%, transparent 65%, rgba(34, 197, 94, 0.08));
     pointer-events: none;
 }
 
 @media (hover: hover) {
     .spec-row:hover::before {
-        opacity: 1;
+        opacity: 0.9;
     }
 
     .spec-row:hover {
-        background: rgba(0, 255, 0, 0.05) !important;
-        border-color: rgba(0, 255, 0, 0.3);
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(255, 255, 255, 0.14);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.05),
+            0 10px 22px rgba(0, 0, 0, 0.22);
     }
 
     .spec-row:hover .spec-icon {
         animation: none;
-        filter: drop-shadow(0 0 10px currentColor);
-        transform: scale(1.1);
+        filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.22));
+        transform: scale(1.08);
     }
 
     .spec-row:hover .spec-value {
-        text-shadow: 0 0 10px currentColor;
+        color: #86efac;
+        text-shadow: none;
     }
 }
 
@@ -518,7 +540,7 @@ body .iziToast-wrapper .iziToast-body p {
 }
 
 .spec-value {
-    transition: text-shadow 0.3s ease;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
 /* Spec title animation */
@@ -535,7 +557,34 @@ body .iziToast-wrapper .iziToast-body p {
 
 /* Copy button animation */
 .spec-copy-btn {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(18px);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.03)) !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    color: #86efac;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 10px 22px rgba(0, 0, 0, 0.18);
+    transition: opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1), transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+}
+
+.spec-copy-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0.85;
+    background: linear-gradient(90deg, rgba(34, 197, 94, 0.05), transparent 35%, transparent 65%, rgba(255, 255, 255, 0.04));
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.spec-copy-btn i,
+.spec-copy-btn span {
+    position: relative;
+    z-index: 1;
 }
 
 .spec-copy-btn.visible {
@@ -544,8 +593,17 @@ body .iziToast-wrapper .iziToast-body p {
 }
 
 .spec-copy-btn:hover {
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-    text-shadow: 0 0 10px currentColor;
+    transform: translateY(-2px);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.04)) !important;
+    border-color: rgba(134, 239, 172, 0.3) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 10px 22px rgba(0, 0, 0, 0.22);
+    color: #86efac;
+}
+
+.spec-copy-btn:hover::before {
+    opacity: 1;
 }
 
 /* --- AVATAR BORDER EFFECTS --- */
@@ -593,7 +651,7 @@ body .iziToast-wrapper .iziToast-body p {
     background-size: 400% 400%;
     padding: 4px;
     animation: gradient-shift 8s ease infinite;
-    transition: --border-color-1 0.8s ease, --border-color-2 0.8s ease, --border-color-3 0.8s ease, --border-color-4 0.8s ease, --glow-color 0.8s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, --border-color-1 0.8s ease, --border-color-2 0.8s ease, --border-color-3 0.8s ease, --border-color-4 0.8s ease, --glow-color 0.8s ease;
     box-shadow: 0 0 15px var(--glow-color);
 }
 
@@ -638,6 +696,20 @@ body .iziToast-wrapper .iziToast-body p {
     position: relative;
     z-index: 1;
     background: #1a1a1a;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (hover: hover) {
+    .avatar-container:hover {
+        transform: scale(1.05) rotate(5deg);
+        box-shadow:
+            0 0 24px var(--glow-color),
+            0 0 38px color-mix(in srgb, var(--glow-color) 70%, transparent);
+    }
+
+    .avatar-container:hover .avatar {
+        box-shadow: 0 0 30px color-mix(in srgb, var(--glow-color) 55%, transparent);
+    }
 }
 
 @keyframes gradient-shift {
@@ -662,7 +734,7 @@ body .iziToast-wrapper .iziToast-body p {
     position: relative;
     overflow: visible;
     box-shadow: none;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .social-link::before {
@@ -694,11 +766,12 @@ body .iziToast-wrapper .iziToast-body p {
 @media (hover: hover) {
     .social-link:hover {
         background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-5px);
         box-shadow:
+            0 5px 15px rgba(255, 255, 255, 0.08),
             0 0 20px var(--brand-glow),
-            0 0 40px var(--brand-glow),
-            inset 0 0 15px var(--brand-glow);
-        border-color: var(--brand-color);
+            inset 0 0 15px color-mix(in srgb, var(--brand-glow) 70%, transparent);
+        border-color: color-mix(in srgb, var(--brand-color) 65%, white 35%);
     }
 
     .social-link:hover::before {
@@ -712,13 +785,10 @@ body .iziToast-wrapper .iziToast-body p {
     }
 }
 
-/* Pulse animation on hover */
-.social-link:hover {
-    animation: neon-pulse 1.5s ease-in-out infinite;
-}
-
 /* SVG icons transition */
-.social-link svg {
+.social-link i,
+.social-link svg,
+.social-link > span {
     transition: transform 0.3s ease, filter 0.3s ease;
 }
 

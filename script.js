@@ -874,7 +874,7 @@ function initConfig() {
             const neonColor = link.neonColor || defaultNeonColor;
             const neonGlow = hexToRgba(neonColor, 0.6);
 
-            a.className = "social-link group relative w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:border-transparent";
+            a.className = "social-link group relative w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center";
             a.style.setProperty('--brand-color', neonColor);
             a.style.setProperty('--brand-glow', neonGlow);
 
@@ -1148,10 +1148,13 @@ function handleCopyAction() {
 
 // Click animation
 function animateClick(el) {
-    el.style.transform = 'scale(0.9)';
+    if (!el) return;
+    el.classList.remove('click-press');
+    void el.offsetWidth;
+    el.classList.add('click-press');
     setTimeout(() => {
-        el.style.transform = 'scale(1)';
-    }, 100);
+        el.classList.remove('click-press');
+    }, 160);
 }
 
 function copyDiscordNick() {
