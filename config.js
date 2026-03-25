@@ -108,12 +108,20 @@ window.CONFIG = {
         {
             enabled: true,
             title: "engivpn",
-            description: "Мой собственный VPN-сервис для стабильного и удобного доступа без лишнего шума.",
+            description: "VPN-сервис для стабильного и удобного доступа без лишнего шума.",
             icon: "image/vpn-icon.png",
             link_text: "Телеграм-бот",
             url: "https://t.me/engivpn_bot",
             secondary_link_text: "Личный кабинет",
             secondary_url: "https://nodeengivpn.nya.pub"
+        },
+        {
+            enabled: true,
+            title: "ReWave",
+            description: "Мощный исполнитель скриптов для Roblox, созданный для того, чтобы вы могли максимально эффективно использовать скрипты.",
+            icon: "image/GradientWave.png",
+            link_text: "Сайт",
+            url: "https://re-wave.vercel.app",
         }
     ],
 

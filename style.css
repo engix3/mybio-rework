@@ -936,7 +936,8 @@ body .iziToast-wrapper .iziToast-body p {
     font-size: 1rem;
     font-weight: 800;
     color: #f8fafc;
-    margin-bottom: 0.45rem;
+    margin: 0;
+    line-height: 1;
 }
 
 .project-item-header {
@@ -950,11 +951,9 @@ body .iziToast-wrapper .iziToast-body p {
     width: 34px;
     height: 34px;
     flex-shrink: 0;
-    border-radius: 10px;
+    display: block;
+    border-radius: 0;
     object-fit: cover;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 }
 
 .project-item-icon-fallback {
@@ -964,11 +963,8 @@ body .iziToast-wrapper .iziToast-body p {
     width: 34px;
     height: 34px;
     flex-shrink: 0;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0;
     color: #67e8f9;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 }
 
 .project-item-description {
