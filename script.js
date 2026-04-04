@@ -1,6 +1,7 @@
-const DISCORD_ID = window.CONFIG.discord.user_id;
-const LASTFM_USERNAME = window.CONFIG.lastfm.username;
-const LASTFM_API_KEY = window.CONFIG.lastfm.api_key;
+const CONFIG = window.CONFIG || {};
+const DISCORD_ID = CONFIG.discord?.user_id || "";
+const LASTFM_USERNAME = CONFIG.lastfm?.username || "";
+const LASTFM_API_KEY = CONFIG.lastfm?.api_key || "";
 
 // Detect mobile immediately (before any init functions)
 const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
@@ -75,7 +76,7 @@ function initSpotlight() {
 // --- TECH STATS ---
 function initTechStats() {
     // Load system specs from config for mobile popup
-    const specs = window.CONFIG.system_specs;
+    const specs = CONFIG.system_specs;
     if (specs) {
         // Mobile Popup Specs
         const mobileCpuEl = document.getElementById('mobile-spec-cpu');
@@ -362,10 +363,11 @@ async function updateLastFM() {
 }
 
 updateLastFM();
-setInterval(updateLastFM, 3000);
+setInterval(updateLastFM, 15000);
 
 // --- DISCORD INTEGRATION (LANYARD) ---
 let discordTimer = null;
+let lanyardHeartbeatInterval = null;
 let currentActivityStart = null;
 let activityStateStr = "";
 let spotifyStart = null;
@@ -379,16 +381,38 @@ const statusColors = {
 };
 
 function connectLanyard() {
+    if (!DISCORD_ID) return;
+
     const ws = new WebSocket('wss://api.lanyard.rest/socket');
-    ws.onopen = () => { ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } })); };
+    ws.onopen = () => {
+        ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } }));
+
+        if (lanyardHeartbeatInterval) clearInterval(lanyardHeartbeatInterval);
+        lanyardHeartbeatInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ op: 3 }));
+            }
+        }, 30000);
+    };
     ws.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
             if (data.t === 'INIT_STATE' || data.t === 'PRESENCE_UPDATE') updateStatus(data.d);
         } catch (e) { }
     };
-    ws.onclose = () => { setTimeout(connectLanyard, 5000); };
-    setInterval(() => { if (ws.readyState === 1) ws.send(JSON.stringify({ op: 3 })); }, 30000);
+    ws.onclose = () => {
+        if (lanyardHeartbeatInterval) {
+            clearInterval(lanyardHeartbeatInterval);
+            lanyardHeartbeatInterval = null;
+        }
+        setTimeout(connectLanyard, 5000);
+    };
+    ws.onerror = () => {
+        if (lanyardHeartbeatInterval) {
+            clearInterval(lanyardHeartbeatInterval);
+            lanyardHeartbeatInterval = null;
+        }
+    };
 }
 
 function animateChange(element, newValue, type = 'text') {
@@ -801,10 +825,10 @@ function initClickEffect() {
 
 // --- CURSOR ---
 function initCursor() {
-    const cursor = window.CONFIG.cursor;
-    const hotspot = window.CONFIG.cursorHotspot || { x: 0, y: 0 };
-    const linkCursor = window.CONFIG.cursorLink;
-    const linkHotspot = window.CONFIG.cursorLinkHotspot || { x: 0, y: 0 };
+    const cursor = CONFIG.cursor;
+    const hotspot = CONFIG.cursorHotspot || { x: 0, y: 0 };
+    const linkCursor = CONFIG.cursorLink;
+    const linkHotspot = CONFIG.cursorLinkHotspot || { x: 0, y: 0 };
 
     // Main cursor
     if (!cursor || cursor === 'default') {
@@ -831,7 +855,7 @@ function initCursor() {
 
 // --- CONFIG INITIALIZATION ---
 function initConfig() {
-    const config = window.CONFIG;
+    const config = CONFIG;
     if (!config) return;
 
     document.title = config.title || "My Bio";
@@ -973,7 +997,7 @@ function initProjectsPopup() {
 
 // --- UTILS ---
 function initTypewriter() {
-    const phrases = window.CONFIG.typewriter_phrases || ["Into the Void"];
+    const phrases = CONFIG.typewriter_phrases || ["Into the Void"];
     const typeEl = document.getElementById('typewriter');
     if (!typeEl) return;
 
@@ -1164,7 +1188,7 @@ function copyDiscordNick() {
         setTimeout(() => el.style.transform = 'scale(1)', 100);
     }
 
-    const copyId = window.CONFIG.discord.copy_id || "User";
+    const copyId = CONFIG.discord?.copy_id || "User";
     navigator.clipboard.writeText(copyId).then(() => {
         showToast({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2', timeout: 2000 });
     });
@@ -1201,7 +1225,7 @@ function copySpec(type) {
             icon = 'fa-solid fa-hard-drive';
             break;
         case 'platform':
-            value = window.CONFIG.system_specs?.platform || 'WINDOWS';
+            value = CONFIG.system_specs?.platform || 'WINDOWS';
             icon = 'fa-brands fa-windows';
             break;
     }
@@ -1213,7 +1237,7 @@ function copySpec(type) {
 }
 
 function copyAllSpecs() {
-    const specs = window.CONFIG.system_specs;
+    const specs = CONFIG.system_specs;
     if (!specs) return;
 
     const allText = `CPU: ${specs.cpu}
