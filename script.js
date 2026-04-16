@@ -368,6 +368,19 @@ setInterval(updateLastFM, 15000);
 // --- DISCORD INTEGRATION (LANYARD) ---
 let discordTimer = null;
 let lanyardHeartbeatInterval = null;
+const discordPublicBadgeMap = [
+    { flag: 1 << 0, title: 'Discord Staff', icon: 'fa-solid fa-staff-snake', className: 'staff' },
+    { flag: 1 << 1, title: 'Partnered Server Owner', icon: 'fa-solid fa-handshake-angle', className: 'partner' },
+    { flag: 1 << 2, title: 'HypeSquad Events', icon: 'fa-solid fa-bolt', className: 'hypesquad' },
+    { flag: 1 << 3, title: 'Bug Hunter Level 1', icon: 'fa-solid fa-bug', className: 'bug-hunter' },
+    { flag: 1 << 6, title: 'HypeSquad Bravery', image: 'image/discord-hypesquad-bravery.png', className: 'house-bravery' },
+    { flag: 1 << 7, title: 'HypeSquad Brilliance', icon: 'fa-solid fa-sun', className: 'house-brilliance' },
+    { flag: 1 << 8, title: 'HypeSquad Balance', icon: 'fa-solid fa-scale-balanced', className: 'house-balance' },
+    { flag: 1 << 9, title: 'Early Supporter', icon: 'fa-solid fa-gem', className: 'early-supporter' },
+    { flag: 1 << 14, title: 'Bug Hunter Level 2', icon: 'fa-solid fa-bug-slash', className: 'bug-hunter' },
+    { flag: 1 << 17, title: 'Early Verified Bot Developer', icon: 'fa-solid fa-code', className: 'verified-developer' },
+    { flag: 1 << 18, title: 'Moderator Programs Alumni', icon: 'fa-solid fa-gavel', className: 'moderator' }
+];
 let currentActivityStart = null;
 let activityStateStr = "";
 let spotifyStart = null;
@@ -433,8 +446,11 @@ function updateStatus(data) {
     const discordCard = document.getElementById('discord-card');
     const mainAvatar = document.getElementById('discord-avatar');
     const cardAvatar = document.getElementById('discord-card-avatar');
+    const cardAvatarWrap = document.getElementById('discord-card-avatar-wrap');
+    const cardAvatarDecoration = document.getElementById('discord-card-avatar-decoration');
     const statusDot = document.getElementById('discord-status-dot');
     const usernameEl = document.getElementById('discord-username');
+    const badgesEl = document.getElementById('discord-badges');
     const subTextEl = document.getElementById('discord-sub-text');
 
     if (!data.discord_user) return;
@@ -456,7 +472,13 @@ function updateStatus(data) {
         }
     }
 
+    const avatarDecorationAsset = user.avatar_decoration_data?.asset;
+    const avatarDecorationUrl = avatarDecorationAsset
+        ? `https://cdn.discordapp.com/avatar-decoration-presets/${avatarDecorationAsset}.png?size=240&passthrough=true`
+        : "";
+
     if (usernameEl) usernameEl.textContent = user.global_name || user.username;
+    renderDiscordBadges(badgesEl, user.public_flags || 0);
 
     // Update Discord tag from Lanyard API (primary_guild)
     const tagEl = document.getElementById('discord-tag');
@@ -497,11 +519,15 @@ function updateStatus(data) {
     let showDot = true;
     let dotContent = "";
     let dotClass = "";
+    let dotBackgroundColor = statusColor;
+    let useMobileNotch = false;
 
     // Games have priority over Spotify
     const game = data.activities && data.activities.length > 0
         ? data.activities.find(a => a.type === 0)
         : null;
+    const hasPresenceActivity = !!game || !!data.listening_to_spotify;
+    syncAvatarDecoration(cardAvatarDecoration, hasPresenceActivity ? "" : avatarDecorationUrl);
 
     if (game) {
         newStatusPrefix = "Playing";
@@ -522,10 +548,11 @@ function updateStatus(data) {
             showDot = true;
             dotClass = "absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-[#111] bg-[#111] flex items-center justify-center overflow-hidden transition-all duration-300";
             dotContent = `<img src="${smallIcon}" class="w-full h-full object-cover">`;
+            dotBackgroundColor = 'transparent';
         } else {
             showDot = !isSquareImage;
             if (showDot) {
-                dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300";
+                dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300 flex items-center justify-center overflow-hidden";
                 dotContent = "";
             }
         }
@@ -564,8 +591,16 @@ function updateStatus(data) {
         newLargeImage = userAvatarUrl;
         isSquareImage = false;
         showDot = true;
-        dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300";
+        dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300 flex items-center justify-center overflow-hidden";
         dotContent = "";
+    }
+
+    if (showDot && !dotContent && data.active_on_discord_mobile) {
+        const mobileGlow = hexToRgbaSafe(statusColor, 0.22);
+        dotClass = `absolute -bottom-1 -right-1 w-[18px] h-[18px] transition-all duration-300 flex items-center justify-center overflow-visible`;
+        dotContent = `<i class="fa-solid fa-mobile-screen-button text-[13px] leading-none" style="color: ${statusColor}; filter: drop-shadow(0 0 4px ${mobileGlow});"></i>`;
+        dotBackgroundColor = "transparent";
+        useMobileNotch = true;
     }
 
     // Update status text elements
@@ -598,13 +633,17 @@ function updateStatus(data) {
         statusDot.className = dotClass;
         if (dotContent) {
             statusDot.innerHTML = dotContent;
-            statusDot.style.backgroundColor = 'transparent';
+            statusDot.style.backgroundColor = dotBackgroundColor;
         } else {
             statusDot.innerHTML = '';
-            statusDot.style.backgroundColor = statusColor;
+            statusDot.style.backgroundColor = dotBackgroundColor;
         }
     } else {
         statusDot.style.display = 'none';
+    }
+
+    if (cardAvatarWrap) {
+        cardAvatarWrap.classList.toggle('mobile-notch', useMobileNotch);
     }
 }
 
@@ -919,6 +958,56 @@ function initConfig() {
     }
 
     initProjects(config.projects);
+}
+
+function syncAvatarDecoration(element, url) {
+    if (!element) return;
+
+    if (!url) {
+        element.removeAttribute('src');
+        element.classList.add('opacity-0');
+        return;
+    }
+
+    if (element.src !== url) {
+        element.classList.add('opacity-0');
+        element.onload = () => element.classList.remove('opacity-0');
+        element.src = url;
+    } else {
+        element.classList.remove('opacity-0');
+    }
+}
+
+function renderDiscordBadges(element, publicFlags) {
+    if (!element) return;
+
+    const badges = discordPublicBadgeMap.filter(badge => (publicFlags & badge.flag) === badge.flag);
+    if (!badges.length) {
+        element.innerHTML = '';
+        element.style.display = 'none';
+        return;
+    }
+
+    element.innerHTML = badges
+        .map(badge => {
+            const content = badge.image
+                ? `<img src="${badge.image}" alt="" aria-hidden="true">`
+                : badge.svg || `<i class="${badge.icon}"></i>`;
+            return `<span class="discord-badge ${badge.className}" title="${badge.title}" aria-label="${badge.title}">${content}</span>`;
+        })
+        .join('');
+    element.style.display = 'inline-flex';
+}
+
+function hexToRgbaSafe(hex, alpha) {
+    if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length !== 7) {
+        return `rgba(255, 255, 255, ${alpha})`;
+    }
+
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function initProjects(projectsConfig) {

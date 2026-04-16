@@ -318,6 +318,7 @@ body.intro-finished .fade-in-stagger {
     white-space: nowrap;
 }
 
+
 /* Click scale animation */
 .click-scale,
 .click-animate {
@@ -864,6 +865,110 @@ body .iziToast-wrapper .iziToast-body p {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.avatar-decoration {
+    position: absolute;
+    inset: 50%;
+    transform: translate(-50%, -50%);
+    object-fit: contain;
+    z-index: 2;
+    transition: opacity 0.35s ease;
+}
+
+.avatar-decoration-card {
+    width: calc(100% + 18px);
+    height: calc(100% + 18px);
+    transform: translate(-50%, -56%);
+}
+
+#discord-card-avatar-wrap.mobile-notch::after {
+    content: '';
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #0a0c0f;
+    z-index: 2;
+    pointer-events: none;
+}
+
+#discord-card-avatar-wrap > #discord-card-avatar {
+    position: relative;
+    z-index: 1;
+}
+
+#discord-card-avatar-wrap > #discord-card-avatar-decoration {
+    z-index: 3;
+}
+
+#discord-card-avatar-wrap > #discord-status-dot {
+    z-index: 4;
+}
+
+.discord-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.discord-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    color: #c4d0ff;
+    filter: drop-shadow(0 0 6px rgba(127, 154, 255, 0.25));
+}
+
+.discord-badge i {
+    font-size: 12px;
+    line-height: 1;
+}
+
+.discord-badge svg {
+    width: 12px;
+    height: 12px;
+    display: block;
+}
+
+.discord-badge img {
+    width: 12px;
+    height: 12px;
+    display: block;
+    object-fit: contain;
+}
+
+.discord-badge.staff {
+    color: #f0b94b;
+}
+
+.discord-badge.partner {
+    color: #7aa2ff;
+}
+
+.discord-badge.hypesquad,
+.discord-badge.house-bravery,
+.discord-badge.house-brilliance,
+.discord-badge.house-balance {
+    color: #8db6ff;
+}
+
+.discord-badge.bug-hunter {
+    color: #7bd88f;
+}
+
+.discord-badge.early-supporter {
+    color: #c58cff;
+}
+
+.discord-badge.verified-developer,
+.discord-badge.moderator {
+    color: #79d6c5;
 }
 
 /* --- PROJECTS --- */
