@@ -1259,6 +1259,12 @@ function handleCopyAction() {
     });
 }
 
+function openSourceCode() {
+    if (window.CONFIG && window.CONFIG.context_menu && window.CONFIG.context_menu.source_code_url) {
+        window.open(window.CONFIG.context_menu.source_code_url, '_blank', 'noopener,noreferrer');
+    }
+}
+
 // Click animation
 function animateClick(el) {
     if (!el) return;
