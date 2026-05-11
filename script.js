@@ -19,6 +19,7 @@ const TOAST_COOLDOWN = 1000; // 1 second cooldown
 
 // Initialize Services
 initConfig();
+initSourceCodeLink();
 initCursor(); // Apply custom cursor
 initCursorTrail(); // Apply cursor trail
 initClickEffect(); // Apply click effect
@@ -1259,10 +1260,10 @@ function handleCopyAction() {
     });
 }
 
-function openSourceCode() {
-    if (window.CONFIG && window.CONFIG.context_menu && window.CONFIG.context_menu.source_code_url) {
-        window.open(window.CONFIG.context_menu.source_code_url, '_blank', 'noopener,noreferrer');
-    }
+function initSourceCodeLink() {
+    const link = document.getElementById('source-code-link');
+    const sourceCodeUrl = CONFIG.context_menu?.source_code_url;
+    if (link && sourceCodeUrl) link.href = sourceCodeUrl;
 }
 
 // Click animation

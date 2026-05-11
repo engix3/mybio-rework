@@ -110,7 +110,7 @@ window.CONFIG = {
             title: "engivpn",
             description: "VPN-сервис для стабильного и удобного доступа без лишнего шума.",
             icon: "image/vpn-icon.png",
-            link_text: "Телеграм-бот",
+            link_text: "Telegram-бот",
             url: "https://t.me/engivpn_bot",
             secondary_link_text: "Личный кабинет",
             secondary_url: "https://nodeengivpn.nya.pub"
@@ -122,6 +122,14 @@ window.CONFIG = {
             icon: "image/GradientWave.png",
             link_text: "Сайт",
             url: "https://re-wave.vercel.app",
+        },
+        {
+            enabled: true,
+            title: "Vibes",
+            description: "Модифицированная версия расширения Vibes (русский язык, ваниловый режим, поддержка ВК).\nОписание: Питч-шифтер, регулятор скорости и реверберация для любого видео или аудио. Включает в себя эффекты slowed+reverb, пресеты в стиле nightcore и бодрящего краба!",
+            icon: "image/Vibes.png",
+            link_text: "GitHub",
+            url: "https://github.com/engix3/vibes-modded/releases",
         }
     ],
 

@@ -1078,6 +1078,7 @@ body .iziToast-wrapper .iziToast-body p {
     line-height: 1.5;
     color: rgba(226, 232, 240, 0.82);
     margin-bottom: 0.75rem;
+    white-space: pre-line;
 }
 
 .project-item-actions {
