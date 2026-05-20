@@ -15,11 +15,25 @@ const RATE_LIMIT_MAX = 60;              // max requests per IP per window
 const ipBuckets = new Map();
 
 function getClientIp(req) {
+    // Prefer Vercel-trusted headers. `x-real-ip` is set by the Vercel edge to the
+    // direct connecting peer and is not client-spoofable. `x-vercel-forwarded-for`
+    // is also set by the edge. Only fall back to `x-forwarded-for` when neither is
+    // present, and in that case take the LAST hop (closest trusted proxy) rather
+    // than the first, which is attacker-controlled in standard XFF semantics.
+    const realIp = req.headers['x-real-ip'];
+    if (typeof realIp === 'string' && realIp.length > 0) return realIp;
+
+    const vercelFwd = req.headers['x-vercel-forwarded-for'];
+    if (typeof vercelFwd === 'string' && vercelFwd.length > 0) {
+        return vercelFwd.split(',').pop().trim();
+    }
+
     const fwd = req.headers['x-forwarded-for'];
     if (typeof fwd === 'string' && fwd.length > 0) {
-        return fwd.split(',')[0].trim();
+        return fwd.split(',').pop().trim();
     }
-    return req.headers['x-real-ip'] || req.socket?.remoteAddress || 'unknown';
+
+    return req.socket?.remoteAddress || 'unknown';
 }
 
 function rateLimit(ip) {

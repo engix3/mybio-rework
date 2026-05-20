@@ -382,8 +382,13 @@ function stopLastFmPolling() {
     clearInterval(lastfmTimer);
     lastfmTimer = null;
 }
-updateLastFM();
-startLastFmPolling();
+// Don't kick off the first request or the interval at all when the tab is opened
+// hidden (e.g. ctrl-click, restored session). visibilitychange will start polling
+// the moment the user actually looks at the page.
+if (document.visibilityState !== 'hidden') {
+    updateLastFM();
+    startLastFmPolling();
+}
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
         stopLastFmPolling();
