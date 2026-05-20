@@ -40,14 +40,21 @@
     <meta property="twitter:image" content="https://engi-bio.vercel.app/screenshot.webp?20260214">
 
     <!-- Libraries & Assets -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.0"
+        integrity="sha384-d5Pc0U2WLIrcpPz/5dTNl91xwJLvbdD+V3+kao+QnRyFRNDW1mKqxoM9b6fzPxsS"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha384-h/hnnw1Bi4nbpD6kE7nYfCXzovi622sY5WBxww8ARKwpdLj5kUWjRuyiXaD1U2JT"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css"
+        integrity="sha384-XzmHBoD8PTvKAokH7D/g9gWW3qBDElSFJ47Wtqutc7kwlOJ8x85zkDm7HX4h03hg"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Quicksand:wght@300;500;700;900&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;700;900&family=Montserrat:wght@400;500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="config.js"></script>
+    <script src="system.js"></script>
 </head>
 
 <body class="text-white min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden relative">
@@ -65,11 +72,12 @@
     </div>
 
     <!-- Background -->
-    <div id="noise"></div>
     <div id="vignette"></div>
     <img id="bg-poster" src="image/bg-poster.webp" alt="Background" loading="lazy">
     <video id="video-bg" autoplay loop muted playsinline poster="image/bg-poster.webp">
-        <source src="video/miyabi-fox-zenless-zone-zero-moewalls-com.mp4" type="video/mp4">
+        <!-- Default source must match config.background.video; script.js will only call
+             video.load() if config explicitly overrides it. -->
+        <source src="video/hatsune-miku-nostalgic-night-moewalls-com.mp4" type="video/mp4">
         Ваш браузер не поддерживает видео.
     </video>
 
@@ -347,8 +355,12 @@
         <div class="mt-1 animate-pulse text-green-400">_</div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"
+        integrity="sha384-QQEAefmew0Un2GyadO5GSPVijOMu9zSE/p+OM1WgLr8sQp9f5ZXokako48B7Ytiw"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"
+        integrity="sha384-AwHbu/XtdPnbgl91oc/K6gC12qX60cGzjUW2tgIfU0zq+kQ0EE7ob0FR3gx41XRe"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="script.js"></script>
 </body>
 

@@ -140,6 +140,11 @@ window.CONFIG = {
     },
     lastfm: {
         username: "engi2",
+        // SECURITY NOTE: Last.fm read-keys are public by design, BUT once committed they
+        // live in git history forever (including forks). If you fork: generate your own
+        // key at https://www.last.fm/api/account/create and replace it here. If you're
+        // worried about quota abuse, proxy the call through a serverless route (see
+        // api/deezer.js for a template) and keep the key in an environment variable.
         api_key: "d150e3e4d37438b5a18bb0f942f3275a"
     },
 

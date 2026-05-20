@@ -15,13 +15,20 @@
     <link rel="preload" href="image/bg-poster.webp" as="image">
 
     <!-- Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.0"
+        integrity="sha384-d5Pc0U2WLIrcpPz/5dTNl91xwJLvbdD+V3+kao+QnRyFRNDW1mKqxoM9b6fzPxsS"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha384-h/hnnw1Bi4nbpD6kE7nYfCXzovi622sY5WBxww8ARKwpdLj5kUWjRuyiXaD1U2JT"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css"
+        integrity="sha384-XzmHBoD8PTvKAokH7D/g9gWW3qBDElSFJ47Wtqutc7kwlOJ8x85zkDm7HX4h03hg"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Quicksand:wght@300;500;700;900&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;700;900&family=Montserrat:wght@400;500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="system.js"></script>
 </head>
 
 <body class="text-white min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden relative">
@@ -40,7 +47,6 @@
     </div>
 
     <!-- Background -->
-    <div id="noise"></div>
     <div id="vignette"></div>
     <!-- 1. Статичная картинка (лежит в самом низу, видна сразу) -->
     <img id="bg-poster" src="image/bg-poster.webp" alt="Background">
@@ -107,12 +113,11 @@
             <i class="fa-solid fa-link text-xs w-5 text-center"></i>
             <span id="context-copy-text">Copy Link</span>
         </button>
-        <button class="menu-item"
-            onclick="window.open('https://github.com/engix3/mybio-rework', '_blank', 'noopener,noreferrer')">
+        <a class="menu-item" href="https://github.com/engix3/mybio-rework" target="_blank" rel="noopener noreferrer">
             <i class="fa-brands fa-github text-xs w-5 text-center"></i> Source Code
-        </button>
+        </a>
         <div class="h-[1px] bg-white/10 w-full my-0.5"></div>
-        <button class="menu-item text-red-400 hover:text-red-300" onclick="triggerReboot()">
+        <button class="menu-item text-red-400 hover:text-red-300" onclick="triggerReboot(() => window.location.href = 'index.html')">
             <i class="fa-solid fa-rotate-right text-xs w-5 text-center"></i> Restart System
         </button>
     </div>
@@ -124,42 +129,36 @@
         <div class="mt-1 animate-pulse text-green-400">_</div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"
+        integrity="sha384-QQEAefmew0Un2GyadO5GSPVijOMu9zSE/p+OM1WgLr8sQp9f5ZXokako48B7Ytiw"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"
+        integrity="sha384-AwHbu/XtdPnbgl91oc/K6gC12qX60cGzjUW2tgIfU0zq+kQ0EE7ob0FR3gx41XRe"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
-        // Initialize the page with similar functionality to the main page
-        document.addEventListener('DOMContentLoaded', function () {
-            // Initially hide the main container for animation
+        // Page-local bits: home navigation + spotlight (context menu + reboot live in system.js).
+        document.addEventListener('DOMContentLoaded', () => {
             const mainContainer = document.getElementById('main-container');
-            mainContainer.style.opacity = '0';
-            mainContainer.style.transform = 'translateY(20px)';
-
-            // Add intro finished class to enable animations
+            if (mainContainer) {
+                mainContainer.style.opacity = '0';
+                mainContainer.style.transform = 'translateY(20px)';
+            }
             document.body.classList.add('intro-finished');
 
-            // Apply fade-in animation to the main container
             setTimeout(() => {
+                if (!mainContainer) return;
                 mainContainer.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
                 mainContainer.style.opacity = '1';
                 mainContainer.style.transform = 'translateY(0)';
             }, 100);
 
-            // Initialize spotlight effect
             initSpotlight();
-
-            // Initialize tooltips
-            initTooltips();
-
-            // Initialize context menu
-            initContextMenu();
         });
 
-        // Function to return to home page
         function goHome() {
             window.location.href = 'index.html';
         }
 
-        // Reuse functions from main site
         function initSpotlight() {
             const card = document.querySelector('.glass-card');
             if (!card) return;
@@ -168,88 +167,6 @@
                 card.style.setProperty('--x', `${e.clientX - rect.left}px`);
                 card.style.setProperty('--y', `${e.clientY - rect.top}px`);
             });
-        }
-
-        function initTooltips() {
-            // Placeholder for tooltip initialization if needed
-        }
-
-        // Context Menu Functions
-        function initContextMenu() {
-            const contextMenu = document.getElementById('custom-context-menu');
-
-            document.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-
-                // Position the context menu
-                contextMenu.style.display = 'flex';
-                contextMenu.style.left = `${e.pageX}px`;
-                contextMenu.style.top = `${e.pageY}px`;
-
-                // Adjust if menu goes off screen
-                const rect = contextMenu.getBoundingClientRect();
-                if (rect.right > window.innerWidth) {
-                    contextMenu.style.left = `${window.innerWidth - rect.width - 10}px`;
-                }
-                if (rect.bottom > window.innerHeight) {
-                    contextMenu.style.top = `${window.innerHeight - rect.height - 10}px`;
-                }
-            });
-
-            document.addEventListener('click', () => {
-                contextMenu.style.display = 'none';
-            });
-        }
-
-        function handleCopyAction() {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                iziToast.show({
-                    theme: 'dark',
-                    icon: 'fa-solid fa-link',
-                    title: 'Link',
-                    message: 'Copied',
-                    position: 'topCenter',
-                    progressBarColor: '#00ff88',
-                    timeout: 2000
-                });
-            });
-        }
-
-        function triggerReboot() {
-            // Hide Context Menu
-            document.getElementById('custom-context-menu').style.display = 'none';
-
-            // Show Reboot Screen
-            const screen = document.getElementById('reboot-screen');
-            const logs = document.getElementById('reboot-logs');
-            screen.classList.remove('hidden');
-            screen.style.display = 'flex';
-
-            // Logs Animation
-            const lines = [
-                "SYSTEM_HALT: CRITICAL_PROCESS_DIED",
-                "Collecting error info...",
-                "Dumping physical memory to disk: 100%",
-                "Clearing cache...",
-                "Contacting admin...",
-                "Initiating system restart..."
-            ];
-
-            let delay = 0;
-            lines.forEach((line, i) => {
-                setTimeout(() => {
-                    const p = document.createElement('div');
-                    p.textContent = `> ${line}`;
-                    logs.appendChild(p);
-                    window.scrollTo(0, document.body.scrollHeight);
-                }, delay);
-                delay += 300 + Math.random() * 400;
-            });
-
-            // Reload Page
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, delay + 500);
         }
     </script>
 </body>
