@@ -5,6 +5,9 @@ const LASTFM_API_KEY = CONFIG.lastfm?.api_key || "";
 
 // Detect mobile immediately (before any init functions)
 const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+const prefersReducedMotion = (window.MyBioSystem && window.MyBioSystem.prefersReducedMotion)
+    ? window.MyBioSystem.prefersReducedMotion
+    : () => (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
 const overlay = document.getElementById('overlay');
 const mainContainer = document.getElementById('main-container');
@@ -14,8 +17,6 @@ let entered = false;
 let currentTiltX = 0, currentTiltY = 0;
 let targetTiltX = 0, targetTiltY = 0;
 let initialGamma = 0, initialBeta = 0;
-let lastToastTime = 0;
-const TOAST_COOLDOWN = 1000; // 1 second cooldown
 
 // Initialize Services
 initConfig();
@@ -184,36 +185,26 @@ async function searchDeezerArt(artist, track) {
     return null;
 }
 
-// MusicBrainz API + Cover Art Archive - supports CORS
+// MusicBrainz API + Cover Art Archive - supports CORS.
+// Note: browsers silently ignore a custom User-Agent header on fetch (RFC 7230 forbidden
+// header), so MusicBrainz only sees the browser's UA. The previous "User-Agent" override
+// was dead code; we omit it now.
 async function searchMusicBrainzArt(artist, track) {
     try {
-        // Search for recording
         const query = `artist:"${artist}" AND recording:"${track}"`;
-        const res = await fetch(`https://musicbrainz.org/ws/2/recording/?query=${encodeURIComponent(query)}&fmt=json&limit=1`, {
-            headers: {
-                'User-Agent': 'MyBio/1.0 (https://github.com/engix3/mybio-rework)'
-            }
-        });
+        const res = await fetch(`https://musicbrainz.org/ws/2/recording/?query=${encodeURIComponent(query)}&fmt=json&limit=1`);
+        if (!res.ok) return null;
         const data = await res.json();
 
         if (data.recordings && data.recordings.length > 0) {
             const recording = data.recordings[0];
 
-            // Get releases for this recording
             if (recording.releases && recording.releases.length > 0) {
                 const releaseId = recording.releases[0].id;
-
-                // Get cover art from Cover Art Archive
-                const coverRes = await fetch(`https://coverartarchive.org/release/${releaseId}`, {
-                    headers: {
-                        'User-Agent': 'MyBio/1.0 (https://github.com/engix3/mybio-rework)'
-                    }
-                });
-
+                const coverRes = await fetch(`https://coverartarchive.org/release/${releaseId}`);
                 if (coverRes.ok) {
                     const coverData = await coverRes.json();
                     if (coverData.images && coverData.images.length > 0) {
-                        // Get front cover if available, otherwise first image
                         const frontCover = coverData.images.find(img => img.front) || coverData.images[0];
                         if (frontCover.thumbnails && frontCover.thumbnails.large) {
                             return frontCover.thumbnails.large;
@@ -234,20 +225,39 @@ async function searchiTunesArt(artist, track) {
     try {
         const query = `${artist} ${track}`;
         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=1`);
+        if (!res.ok) return null;
         const data = await res.json();
-        if (data.results && data.results.length > 0) {
-            return data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
+        if (data.results && data.results.length > 0 && data.results[0].artworkUrl100) {
+            // Bump thumbnail (100x100bb / 100x100-99) to a larger variant when possible
+            return data.results[0].artworkUrl100.replace(/100x100([-a-z0-9]*)\.(jpg|png|webp)/i, '600x600$1.$2');
         }
     } catch (e) { }
     return null;
 }
 
+// In-memory cache: avoid re-fetching album art for tracks we already resolved this session.
+const albumArtCache = new Map();
+const ALBUM_ART_CACHE_MAX = 100;
+function artCacheKey(artist, track) {
+    return `${(artist || '').toLowerCase().trim()}::${(track || '').toLowerCase().trim()}`;
+}
+function rememberArt(key, url) {
+    if (!key) return;
+    if (albumArtCache.size >= ALBUM_ART_CACHE_MAX) {
+        const firstKey = albumArtCache.keys().next().value;
+        if (firstKey !== undefined) albumArtCache.delete(firstKey);
+    }
+    albumArtCache.set(key, url);
+}
+
 // Try all sources in order of quality with timeout
 async function findBestArt(artist, track, lastFmImage) {
-    // Create a timeout promise
-    const timeout = (ms) => new Promise(resolve => setTimeout(() => resolve(null), ms));
+    const key = artCacheKey(artist, track);
+    if (key && albumArtCache.has(key)) {
+        return albumArtCache.get(key) || lastFmImage || "";
+    }
 
-    // Try each source with a timeout
+    const timeout = (ms) => new Promise(resolve => setTimeout(() => resolve(null), ms));
     const tryWithTimeout = async (fn, ms = 2000) => {
         try {
             return await Promise.race([fn(), timeout(ms)]);
@@ -256,20 +266,15 @@ async function findBestArt(artist, track, lastFmImage) {
         }
     };
 
-    // Try Deezer first (highest quality, up to 1000x1000)
-    const deezerArt = await tryWithTimeout(() => searchDeezerArt(artist, track), 2000);
-    if (deezerArt) return deezerArt;
+    let result =
+        await tryWithTimeout(() => searchDeezerArt(artist, track), 2000) ||
+        await tryWithTimeout(() => searchMusicBrainzArt(artist, track), 3000) ||
+        await tryWithTimeout(() => searchiTunesArt(artist, track), 2000) ||
+        lastFmImage ||
+        "";
 
-    // Try MusicBrainz + Cover Art Archive (variable quality)
-    const mbArt = await tryWithTimeout(() => searchMusicBrainzArt(artist, track), 3000);
-    if (mbArt) return mbArt;
-
-    // Fallback to iTunes (600x600)
-    const iTunesArt = await tryWithTimeout(() => searchiTunesArt(artist, track), 2000);
-    if (iTunesArt) return iTunesArt;
-
-    // Last resort: Last.fm image
-    return lastFmImage || "";
+    rememberArt(key, result);
+    return result;
 }
 
 async function updateLastFM() {
@@ -312,8 +317,10 @@ async function updateLastFM() {
             }
         }
 
-        if (lastSongName !== currentSongName) {
-            lastSongName = currentSongName;
+        // Cache key combines artist + title so two tracks with the same title don't collide.
+        const currentTrackKey = `${currentArtist}::${currentSongName}`;
+        if (lastSongName !== currentTrackKey) {
+            lastSongName = currentTrackKey;
             playingCounter = 0;
 
             // Fade out for smooth transition
@@ -363,8 +370,33 @@ async function updateLastFM() {
     }
 }
 
-updateLastFM();
-setInterval(updateLastFM, 15000);
+// Last.fm polling. Pauses when the tab is hidden so we don't burn API quota or battery.
+const LASTFM_POLL_MS = 15000;
+let lastfmTimer = null;
+function startLastFmPolling() {
+    if (lastfmTimer != null) return;
+    lastfmTimer = setInterval(updateLastFM, LASTFM_POLL_MS);
+}
+function stopLastFmPolling() {
+    if (lastfmTimer == null) return;
+    clearInterval(lastfmTimer);
+    lastfmTimer = null;
+}
+// Don't kick off the first request or the interval at all when the tab is opened
+// hidden (e.g. ctrl-click, restored session). visibilitychange will start polling
+// the moment the user actually looks at the page.
+if (document.visibilityState !== 'hidden') {
+    updateLastFM();
+    startLastFmPolling();
+}
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        stopLastFmPolling();
+    } else {
+        updateLastFM();
+        startLastFmPolling();
+    }
+});
 
 // --- DISCORD INTEGRATION (LANYARD) ---
 let discordTimer = null;
@@ -394,11 +426,30 @@ const statusColors = {
     offline: "#80848e"
 };
 
+// Reconnect with exponential backoff (capped) so a Lanyard outage doesn't hammer the endpoint.
+const LANYARD_BACKOFF_MIN = 2000;
+const LANYARD_BACKOFF_MAX = 60000;
+let lanyardBackoff = LANYARD_BACKOFF_MIN;
+let lanyardReconnectTimer = null;
+
+function scheduleLanyardReconnect() {
+    if (lanyardReconnectTimer) return;
+    const delay = lanyardBackoff;
+    lanyardReconnectTimer = setTimeout(() => {
+        lanyardReconnectTimer = null;
+        connectLanyard();
+    }, delay);
+    // Exponential growth, capped
+    lanyardBackoff = Math.min(LANYARD_BACKOFF_MAX, Math.floor(lanyardBackoff * 1.7));
+}
+
 function connectLanyard() {
     if (!DISCORD_ID) return;
 
     const ws = new WebSocket('wss://api.lanyard.rest/socket');
     ws.onopen = () => {
+        // Successful connection -> reset backoff so the next failure starts small again
+        lanyardBackoff = LANYARD_BACKOFF_MIN;
         ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } }));
 
         if (lanyardHeartbeatInterval) clearInterval(lanyardHeartbeatInterval);
@@ -419,13 +470,14 @@ function connectLanyard() {
             clearInterval(lanyardHeartbeatInterval);
             lanyardHeartbeatInterval = null;
         }
-        setTimeout(connectLanyard, 5000);
+        scheduleLanyardReconnect();
     };
     ws.onerror = () => {
         if (lanyardHeartbeatInterval) {
             clearInterval(lanyardHeartbeatInterval);
             lanyardHeartbeatInterval = null;
         }
+        // onclose will follow and schedule the reconnect.
     };
 }
 
@@ -723,6 +775,7 @@ function initCursorTrail() {
     const trail = window.CONFIG.cursorTrail;
     if (!trail || !trail.enabled) return;
     if (isMobileDevice) return; // Disable on mobile
+    if (prefersReducedMotion()) return; // Respect user motion preferences
 
     // Wait for "click to enter" before creating elements
     const checkAndCreate = () => {
@@ -806,6 +859,7 @@ function initClickEffect() {
     const effect = window.CONFIG.cursorClickEffect;
     if (!effect || !effect.enabled) return;
     if (isMobileDevice) return; // Disable on mobile
+    if (prefersReducedMotion()) return; // Respect user motion preferences
 
     const colors = effect.colors || ['#00ff88'];
     const count = effect.count || 8;
@@ -904,13 +958,17 @@ function initConfig() {
 
     const bgPoster = document.getElementById('bg-poster');
     const bgVideo = document.getElementById('video-bg');
-    if (bgPoster && config.background.poster && bgPoster.getAttribute('src') !== config.background.poster) {
-        bgPoster.src = config.background.poster;
+    const posterSrc = config.background?.poster;
+    const videoSrc = config.background?.video;
+    if (bgPoster && posterSrc && bgPoster.getAttribute('src') !== posterSrc) {
+        bgPoster.src = posterSrc;
     }
-    if (bgVideo && config.background.video) {
+    if (bgVideo && videoSrc) {
+        // Only swap + reload when the config actually differs from the baked-in HTML
+        // source. Avoids the double-download we used to do on every page load.
         const source = bgVideo.querySelector('source');
-        if (source && source.getAttribute('src') !== config.background.video) {
-            source.src = config.background.video;
+        if (source && source.getAttribute('src') !== videoSrc) {
+            source.src = videoSrc;
             bgVideo.load();
         }
     }
@@ -1229,36 +1287,10 @@ function initTooltips() {
     });
 }
 
-const contextMenu = document.getElementById('custom-context-menu');
-let linkToCopy = null;
-
-document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    if (!contextMenu) return;
-    const link = e.target.closest('a');
-    document.getElementById('context-copy-text').textContent = link ? "Copy Link Address" : "Copy Site Link";
-    linkToCopy = link ? link.href : window.location.href;
-    contextMenu.style.left = `${Math.min(e.clientX, window.innerWidth - 160)}px`;
-    contextMenu.style.top = `${e.clientY}px`;
-    contextMenu.style.display = 'flex';
-});
-
-document.addEventListener('click', () => { if (contextMenu) contextMenu.style.display = 'none'; });
-
-// Toast helper with spam protection
-function showToast(options) {
-    const now = Date.now();
-    if (now - lastToastTime < TOAST_COOLDOWN) return;
-    lastToastTime = now;
-    iziToast.show(options);
-}
-
-function handleCopyAction() {
-    const url = linkToCopy || window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-        showToast({ theme: 'dark', icon: 'fa-solid fa-link', title: 'Link', message: 'Copied', position: 'topCenter', progressBarColor: '#00ff88', timeout: 2000 });
-    });
-}
+// Context menu + toast + copy-link live in system.js (shared with 404.html). Re-export the
+// toast helper as a local name so the rest of this file keeps using showToast() unchanged.
+const showToast = (window.MyBioSystem && window.MyBioSystem.showToast) || function () { };
+const handleCopyAction = (window.MyBioSystem && window.MyBioSystem.handleCopyAction) || function () { };
 
 function initSourceCodeLink() {
     const link = document.getElementById('source-code-link');
@@ -1355,51 +1387,25 @@ PLATFORM: ${specs.platform || 'WINDOWS'}`;
     });
 }
 
-// --- REBOOT SYSTEM ---
-function triggerReboot() {
-    if (contextMenu) contextMenu.style.display = 'none';
-    mainContainer.classList.add('ui-hidden');
+// Reboot screen lives in system.js (shared with 404.html). Inline onclick="triggerReboot()"
+// still works because system.js exposes it as a global.
 
-    const screen = document.getElementById('reboot-screen');
-    const logs = document.getElementById('reboot-logs');
-    screen.classList.remove('hidden');
-    screen.style.display = 'flex';
-
-    const lines = [
-        "SYSTEM_HALT: CRITICAL_PROCESS_DIED",
-        "Collecting error info...",
-        "Dumping physical memory to disk: 100%",
-        "Clearing cache...",
-        "Contacting admin...",
-        "Initiating system restart..."
-    ];
-
-    let delay = 0;
-    lines.forEach((line) => {
-        setTimeout(() => {
-            const p = document.createElement('div');
-            p.textContent = `> ${line}`;
-            logs.appendChild(p);
-            window.scrollTo(0, document.body.scrollHeight);
-        }, delay);
-        delay += 300 + Math.random() * 400;
-    });
-
-    setTimeout(() => { location.reload(); }, delay + 500);
-}
-
+// Cinematic mode: original was Insert-only; many laptops/Macs lack that key, so accept H too.
+// Skip when the user is typing into a form field.
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'Insert') {
-        mainContainer.classList.toggle('ui-hidden');
-        if (videoBg) {
-            const vignette = document.getElementById('vignette');
-            if (mainContainer.classList.contains('ui-hidden')) {
-                videoBg.classList.add('video-clean');
-                if (vignette) vignette.style.opacity = '0';
-            } else {
-                videoBg.classList.remove('video-clean');
-                if (vignette) vignette.style.opacity = '1';
-            }
+    const isCinematicKey = e.code === 'Insert' || (e.code === 'KeyH' && !e.ctrlKey && !e.metaKey && !e.altKey);
+    if (!isCinematicKey) return;
+    if (e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"]')) return;
+
+    mainContainer.classList.toggle('ui-hidden');
+    if (videoBg) {
+        const vignette = document.getElementById('vignette');
+        if (mainContainer.classList.contains('ui-hidden')) {
+            videoBg.classList.add('video-clean');
+            if (vignette) vignette.style.opacity = '0';
+        } else {
+            videoBg.classList.remove('video-clean');
+            if (vignette) vignette.style.opacity = '1';
         }
     }
 });

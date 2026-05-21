@@ -17,20 +17,6 @@ body {
 
 /* --- BACKGROUND EFFECTS --- */
 
-/* Film Grain */
-#noise {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 5;
-    opacity: 0.07;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
-
 /* Background Dimming */
 #vignette {
     position: fixed;
@@ -1145,5 +1131,92 @@ body .iziToast-wrapper .iziToast-body p {
     .project-item-icon-fallback {
         width: 30px;
         height: 30px;
+    }
+}
+
+/* =========================================
+   ACCESSIBILITY: allow copying meaningful text content.
+   Body keeps `user-select: none` to preserve the no-drag-select aesthetic on
+   decorative chrome, but a handful of high-signal elements opt back in.
+   ========================================= */
+
+#main-nickname,
+#typewriter,
+#discord-username,
+#discord-status-name,
+#discord-sub-text,
+#fm-song-title,
+#fm-artist,
+#mobile-spec-cpu,
+#mobile-spec-gpu,
+#mobile-spec-ram,
+#mobile-spec-storage,
+#mobile-spec-platform,
+.project-item-title,
+.project-item-description {
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+/* =========================================
+   ACCESSIBILITY: prefers-reduced-motion.
+   Strip decorative loops + transitions when the OS asks for reduced motion.
+   The site continues to function; only the moving parts go quiet.
+   ========================================= */
+@media (prefers-reduced-motion: reduce) {
+
+    /* Stop all infinite / decorative loops */
+    .scanline,
+    .neon-pulse,
+    .avatar-container,
+    .stats-enter-anim,
+    .glass-menu,
+    .fade-in-stagger,
+    .animate-pulse,
+    .animate-bounce {
+        animation: none !important;
+    }
+
+    .neon-pulse {
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+        opacity: 1;
+    }
+
+    .fade-in-stagger {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .avatar-container {
+        background-position: 0% 50%;
+    }
+
+    /* Make the click-press and spec-row reveal effectively instant */
+    .click-press {
+        animation: none;
+    }
+
+    .spec-row,
+    .spec-title,
+    .spec-copy-btn {
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    /* Background blur ease-in: trim the slow fades */
+    #video-bg,
+    #vignette {
+        transition: opacity 0.2s linear;
+    }
+
+    /* Disable hover transform jolts */
+    .avatar-container:hover,
+    .social-link:hover,
+    .projects-btn:hover,
+    .project-item-link:hover,
+    .spec-row:hover,
+    .spec-copy-btn:hover {
+        transform: none !important;
     }
 }
