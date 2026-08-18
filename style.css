@@ -863,9 +863,11 @@ body .iziToast-wrapper .iziToast-body p {
 }
 
 .avatar-decoration-card {
-    width: calc(100% + 18px);
-    height: calc(100% + 18px);
-    transform: translate(-50%, -56%);
+    /* Discord decorations are drawn just beyond the avatar edge; a large scale and
+       upward offset make them look detached in the compact status card. */
+    width: calc(100% + 6px);
+    height: calc(100% + 6px);
+    transform: translate(-50%, -50%);
 }
 
 #discord-card-avatar-wrap.mobile-notch::after {
