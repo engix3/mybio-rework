@@ -38,7 +38,7 @@
             const ok = document.execCommand('copy');
             document.body.removeChild(ta);
             return Promise.resolve(ok);
-        } catch (e) {
+        } catch (_error) {
             return Promise.resolve(false);
         }
     }
@@ -85,8 +85,26 @@
             contextMenu.style.top = `${Math.max(0, top)}px`;
         });
 
+        const copyAction = document.getElementById('context-copy-action');
+        if (copyAction) copyAction.addEventListener('click', handleCopyAction);
+
+        const rebootAction = document.getElementById('context-reboot-action');
+        if (rebootAction) {
+            rebootAction.addEventListener('click', () => {
+                const redirect = rebootAction.dataset.rebootRedirect;
+                if (redirect) {
+                    triggerReboot(() => window.location.assign(redirect));
+                } else {
+                    triggerReboot();
+                }
+            });
+        }
+
         document.addEventListener('click', () => {
             contextMenu.style.display = 'none';
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') contextMenu.style.display = 'none';
         });
     }
 
@@ -133,12 +151,12 @@
     function prefersReducedMotion() {
         try {
             return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        } catch (e) {
+        } catch (_error) {
             return false;
         }
     }
 
-    // Expose namespace + a few backward-compat globals so inline onclick="" still works
+    // Expose a small namespace for page modules without relying on inline handlers.
     window.MyBioSystem = {
         showToast,
         copyToClipboard,
@@ -149,10 +167,6 @@
         getLinkToCopy: () => linkToCopy,
         setLinkToCopy: (v) => { linkToCopy = v; }
     };
-    window.showToast = showToast;
-    window.handleCopyAction = handleCopyAction;
-    window.triggerReboot = triggerReboot;
-
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initContextMenu);
     } else {

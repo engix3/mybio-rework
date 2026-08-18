@@ -14,23 +14,23 @@ const mainContainer = document.getElementById('main-container');
 const videoBg = document.getElementById('video-bg');
 
 let entered = false;
-let currentTiltX = 0, currentTiltY = 0;
-let targetTiltX = 0, targetTiltY = 0;
-let initialGamma = 0, initialBeta = 0;
 
 // Initialize Services
 initConfig();
 initSourceCodeLink();
 initCursor(); // Apply custom cursor
-initCursorTrail(); // Apply cursor trail
 initClickEffect(); // Apply click effect
 initTechStats(); // Load specs immediately
+initDiscordCard();
+initLastFmCopyButton();
 connectLanyard();
 
 // --- SYSTEM ENTRY ---
 overlay.addEventListener('click', async () => {
     if (entered) return;
     entered = true;
+    initCursorTrail();
+    initBackgroundVideo();
 
     if (isMobileDevice) {
         const card = document.querySelector('.glass-card');
@@ -50,10 +50,10 @@ overlay.addEventListener('click', async () => {
         overlay.style.display = 'none';
         mainContainer.classList.remove('hidden');
 
-        try { initTypewriter(); } catch (e) { }
-        try { setGreeting(); } catch (e) { }
-        try { updateLastFM(); } catch (e) { }
-        try { initSpotlight(); } catch (e) { }
+        try { initTypewriter(); } catch (_error) { /* Optional enhancement: retain the main page flow. */ }
+        try { setGreeting(); } catch (_error) { /* Optional enhancement: retain the main page flow. */ }
+        try { updateLastFM(); } catch (_error) { /* Optional enhancement: retain the main page flow. */ }
+        try { initSpotlight(); } catch (_error) { /* Optional enhancement: retain the main page flow. */ }
         initTooltips();
         initProjectsPopup();
 
@@ -107,6 +107,9 @@ function initTechStats() {
             mobileSpecsPopup.classList.remove('opacity-0', 'pointer-events-none');
             mobileSpecsContent.classList.remove('scale-95');
             mobileSpecsContent.classList.add('scale-100');
+            mobileSpecsBtn.setAttribute('aria-expanded', 'true');
+            mobileSpecsContent.setAttribute('tabindex', '-1');
+            requestAnimationFrame(() => closeSpecsPopup.focus());
 
             // Animate title
             const specTitle = mobileSpecsContent.querySelector('.spec-title');
@@ -145,12 +148,37 @@ function initTechStats() {
             mobileSpecsPopup.classList.add('opacity-0', 'pointer-events-none');
             mobileSpecsContent.classList.add('scale-95');
             mobileSpecsContent.classList.remove('scale-100');
+            mobileSpecsBtn.setAttribute('aria-expanded', 'false');
+            mobileSpecsBtn.focus();
         };
 
-        mobileSpecsBtn.addEventListener('click', openPopup);
+        mobileSpecsBtn.setAttribute('aria-haspopup', 'dialog');
+        mobileSpecsBtn.setAttribute('aria-expanded', 'false');
+        mobileSpecsBtn.addEventListener('click', () => {
+            animateClick(mobileSpecsBtn);
+            openPopup();
+        });
         closeSpecsPopup.addEventListener('click', closePopup);
         mobileSpecsPopup.addEventListener('click', (e) => {
             if (e.target === mobileSpecsPopup) closePopup();
+        });
+        mobileSpecsContent.querySelectorAll('[data-copy-spec]').forEach((button) => {
+            button.addEventListener('click', () => copySpec(button.dataset.copySpec));
+        });
+
+        const copyAllButton = document.getElementById('copy-all-specs');
+        if (copyAllButton) {
+            copyAllButton.addEventListener('click', () => {
+                animateClick(copyAllButton);
+                copyAllSpecs();
+            });
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !mobileSpecsPopup.classList.contains('pointer-events-none')) {
+                closePopup();
+                mobileSpecsBtn.focus();
+            }
         });
     }
 }
@@ -181,7 +209,7 @@ async function searchDeezerArt(artist, track) {
                 return album.cover_big; // 500x500
             }
         }
-    } catch (e) { }
+    } catch (_error) { /* Optional enhancement: retain the main page flow. */ }
     return null;
 }
 
@@ -216,7 +244,7 @@ async function searchMusicBrainzArt(artist, track) {
                 }
             }
         }
-    } catch (e) { }
+    } catch (_error) { /* Optional enhancement: retain the main page flow. */ }
     return null;
 }
 
@@ -231,7 +259,7 @@ async function searchiTunesArt(artist, track) {
             // Bump thumbnail (100x100bb / 100x100-99) to a larger variant when possible
             return data.results[0].artworkUrl100.replace(/100x100([-a-z0-9]*)\.(jpg|png|webp)/i, '600x600$1.$2');
         }
-    } catch (e) { }
+    } catch (_error) { /* Optional enhancement: retain the main page flow. */ }
     return null;
 }
 
@@ -463,7 +491,7 @@ function connectLanyard() {
         try {
             const data = JSON.parse(event.data);
             if (data.t === 'INIT_STATE' || data.t === 'PRESENCE_UPDATE') updateStatus(data.d);
-        } catch (e) { }
+        } catch (_error) { /* Optional enhancement: retain the main page flow. */ }
     };
     ws.onclose = () => {
         if (lanyardHeartbeatInterval) {
@@ -482,17 +510,45 @@ function connectLanyard() {
 }
 
 function animateChange(element, newValue, type = 'text') {
+    if (!element) return;
     if (type === 'image' && element.src === newValue) return;
-    if (type === 'html' && element.innerHTML === newValue) return;
     if (type === 'text' && element.textContent === newValue) return;
 
     element.style.opacity = '0';
     setTimeout(() => {
         if (type === 'image') element.src = newValue;
-        else if (type === 'html') element.innerHTML = newValue;
         else element.textContent = newValue;
         element.style.opacity = '1';
     }, 200);
+}
+
+function renderStatusIcon(element, iconClass) {
+    if (!element || element.dataset.iconClass === iconClass) return;
+
+    element.style.opacity = '0';
+    setTimeout(() => {
+        element.replaceChildren();
+        if (iconClass) {
+            const icon = document.createElement('i');
+            icon.className = iconClass;
+            icon.setAttribute('aria-hidden', 'true');
+            element.appendChild(icon);
+        }
+        element.dataset.iconClass = iconClass;
+        element.style.opacity = '1';
+    }, 200);
+}
+
+function setImageContent(element, src, className) {
+    if (!element) return;
+    element.replaceChildren();
+    if (!src) return;
+
+    const image = document.createElement('img');
+    image.src = src;
+    image.className = className;
+    image.alt = '';
+    element.appendChild(image);
 }
 
 function updateStatus(data) {
@@ -544,7 +600,7 @@ function updateStatus(data) {
         // Add guild badge icon if available
         if (tagIconEl && user.primary_guild.badge) {
             const badgeUrl = `https://cdn.discordapp.com/guild-tag-badges/${user.primary_guild.identity_guild_id}/${user.primary_guild.badge}.png?size=64`;
-            tagIconEl.innerHTML = `<img src="${badgeUrl}" class="w-3 h-3 rounded-sm object-cover" alt="">`;
+            setImageContent(tagIconEl, badgeUrl, 'w-3 h-3 rounded-sm object-cover');
             tagIconEl.style.display = 'flex';
         } else if (tagIconEl) {
             tagIconEl.style.display = 'none';
@@ -566,14 +622,15 @@ function updateStatus(data) {
 
     let newStatusPrefix = "";
     let newStatusName = "";
-    let newStatusIcon = "";
+    let newStatusIconClass = "";
     let newLargeImage = "";
     let isSquareImage = false;
     let showDot = true;
-    let dotContent = "";
-    let dotClass = "";
+    let dotImageUrl = '';
+    let dotClass = '';
     let dotBackgroundColor = statusColor;
     let useMobileNotch = false;
+    let useMobileIcon = false;
 
     // Games have priority over Spotify
     const game = data.activities && data.activities.length > 0
@@ -585,7 +642,7 @@ function updateStatus(data) {
     if (game) {
         newStatusPrefix = "Playing";
         newStatusName = game.name;
-        newStatusIcon = "";
+        newStatusIconClass = '';
 
         let largeIcon = game.assets?.large_image;
         if (largeIcon?.startsWith('mp:')) largeIcon = largeIcon.replace('mp:', 'https://media.discordapp.net/');
@@ -600,13 +657,13 @@ function updateStatus(data) {
 
             showDot = true;
             dotClass = "absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-[#111] bg-[#111] flex items-center justify-center overflow-hidden transition-all duration-300";
-            dotContent = `<img src="${smallIcon}" class="w-full h-full object-cover">`;
+            dotImageUrl = smallIcon;
             dotBackgroundColor = 'transparent';
         } else {
             showDot = !isSquareImage;
             if (showDot) {
                 dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300 flex items-center justify-center overflow-hidden";
-                dotContent = "";
+                dotImageUrl = '';
             }
         }
 
@@ -622,7 +679,7 @@ function updateStatus(data) {
         // Show "Listening" in gray + song name in white + green Spotify icon
         newStatusPrefix = "Listening";
         newStatusName = data.spotify.song;
-        newStatusIcon = `<i class="fa-brands fa-spotify text-green-400 text-[10px] ml-0.5"></i>`;
+        newStatusIconClass = 'fa-brands fa-spotify text-green-400 text-[10px] ml-0.5';
         activityStateStr = data.spotify.artist;
         newLargeImage = data.spotify.album_art_url;
         isSquareImage = true;
@@ -639,21 +696,20 @@ function updateStatus(data) {
     else {
         newStatusPrefix = data.discord_status.charAt(0).toUpperCase() + data.discord_status.slice(1);
         newStatusName = "";
-        newStatusIcon = "";
+        newStatusIconClass = '';
         activityStateStr = "Chilling";
         newLargeImage = userAvatarUrl;
         isSquareImage = false;
         showDot = true;
         dotClass = "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#111] transition-all duration-300 flex items-center justify-center overflow-hidden";
-        dotContent = "";
+        dotImageUrl = '';
     }
 
-    if (showDot && !dotContent && data.active_on_discord_mobile) {
-        const mobileGlow = hexToRgbaSafe(statusColor, 0.22);
-        dotClass = `absolute -bottom-1 -right-1 w-[18px] h-[18px] transition-all duration-300 flex items-center justify-center overflow-visible`;
-        dotContent = `<i class="fa-solid fa-mobile-screen-button text-[13px] leading-none" style="color: ${statusColor}; filter: drop-shadow(0 0 4px ${mobileGlow});"></i>`;
-        dotBackgroundColor = "transparent";
+    if (showDot && !dotImageUrl && data.active_on_discord_mobile) {
+        dotClass = 'absolute -bottom-1 -right-1 w-[18px] h-[18px] transition-all duration-300 flex items-center justify-center overflow-visible';
+        dotBackgroundColor = 'transparent';
         useMobileNotch = true;
+        useMobileIcon = true;
     }
 
     // Update status text elements
@@ -663,7 +719,7 @@ function updateStatus(data) {
 
     animateChange(statusPrefixEl, newStatusPrefix, 'text');
     animateChange(statusNameEl, newStatusName, 'text');
-    animateChange(statusIconEl, newStatusIcon, 'html');
+    renderStatusIcon(statusIconEl, newStatusIconClass);
 
     const avatarClass = isSquareImage
         ? "w-10 h-10 object-cover rounded-md transition-all duration-500 ease-in-out"
@@ -684,15 +740,26 @@ function updateStatus(data) {
     if (showDot) {
         statusDot.style.display = 'flex';
         statusDot.className = dotClass;
-        if (dotContent) {
-            statusDot.innerHTML = dotContent;
-            statusDot.style.backgroundColor = dotBackgroundColor;
-        } else {
-            statusDot.innerHTML = '';
-            statusDot.style.backgroundColor = dotBackgroundColor;
+        statusDot.style.backgroundColor = dotBackgroundColor;
+        statusDot.replaceChildren();
+
+        if (dotImageUrl) {
+            const iconImage = document.createElement('img');
+            iconImage.src = dotImageUrl;
+            iconImage.className = 'w-full h-full object-cover';
+            iconImage.alt = '';
+            statusDot.appendChild(iconImage);
+        } else if (useMobileIcon) {
+            const mobileIcon = document.createElement('i');
+            mobileIcon.className = 'fa-solid fa-mobile-screen-button text-[13px] leading-none';
+            mobileIcon.style.color = statusColor;
+            mobileIcon.style.filter = `drop-shadow(0 0 4px ${hexToRgbaSafe(statusColor, 0.22)})`;
+            mobileIcon.setAttribute('aria-hidden', 'true');
+            statusDot.appendChild(mobileIcon);
         }
     } else {
         statusDot.style.display = 'none';
+        statusDot.replaceChildren();
     }
 
     if (cardAvatarWrap) {
@@ -716,18 +783,18 @@ function updateGameString() {
         timeStr = `${hours > 0 ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} elapsed`;
     }
 
-    const newContent = activityStateStr ? `${activityStateStr} &bull; ${timeStr}` : timeStr;
+    const newContent = activityStateStr ? `${activityStateStr} • ${timeStr}` : timeStr;
 
     // Only animate if activity state changed (not just time)
     if (lastActivityStateStr !== activityStateStr) {
         lastActivityStateStr = activityStateStr;
         el.style.opacity = '0';
         setTimeout(() => {
-            el.innerHTML = newContent;
+            el.textContent = newContent;
             el.style.opacity = '1';
         }, 200);
     } else {
-        el.innerHTML = newContent;
+        el.textContent = newContent;
     }
 }
 
@@ -751,19 +818,19 @@ function updateSpotifyString() {
 
     const elapsedStr = formatTime(elapsed);
     const totalStr = formatTime(total);
-    const newContent = activityStateStr ? `${activityStateStr} &bull; ${elapsedStr} / ${totalStr}` : `${elapsedStr} / ${totalStr}`;
+    const newContent = activityStateStr ? `${activityStateStr} • ${elapsedStr} / ${totalStr}` : `${elapsedStr} / ${totalStr}`;
 
     // Only animate if artists changed (not just time)
     if (lastSpotifyArtists !== activityStateStr) {
         lastSpotifyArtists = activityStateStr;
         el.style.opacity = '0';
         setTimeout(() => {
-            el.innerHTML = newContent;
+            el.textContent = newContent;
             el.style.opacity = '1';
         }, 200);
     } else {
         // Just time update - no animation
-        el.innerHTML = newContent;
+        el.textContent = newContent;
     }
 }
 
@@ -773,20 +840,12 @@ let trailInitialized = false;
 
 function initCursorTrail() {
     const trail = window.CONFIG.cursorTrail;
-    if (!trail || !trail.enabled) return;
+    if (!trail || !trail.enabled || trailInitialized) return;
     if (isMobileDevice) return; // Disable on mobile
     if (prefersReducedMotion()) return; // Respect user motion preferences
 
-    // Wait for "click to enter" before creating elements
-    const checkAndCreate = () => {
-        if (entered && !trailInitialized) {
-            trailInitialized = true;
-            createTrail();
-        } else if (!entered) {
-            requestAnimationFrame(checkAndCreate);
-        }
-    };
-    checkAndCreate();
+    trailInitialized = true;
+    createTrail();
 }
 
 function createTrail() {
@@ -861,7 +920,9 @@ function initClickEffect() {
     if (isMobileDevice) return; // Disable on mobile
     if (prefersReducedMotion()) return; // Respect user motion preferences
 
-    const colors = effect.colors || ['#00ff88'];
+    const colors = Array.isArray(effect.colors) && effect.colors.length > 0
+        ? effect.colors
+        : [effect.color || '#00ff88'];
     const count = effect.count || 8;
     const sizeVariation = effect.sizeVariation !== false;
     const spread = effect.spread !== false;
@@ -960,17 +1021,15 @@ function initConfig() {
     const bgVideo = document.getElementById('video-bg');
     const posterSrc = config.background?.poster;
     const videoSrc = config.background?.video;
+    const videoWebmSrc = config.background?.video_webm;
     if (bgPoster && posterSrc && bgPoster.getAttribute('src') !== posterSrc) {
         bgPoster.src = posterSrc;
     }
-    if (bgVideo && videoSrc) {
-        // Only swap + reload when the config actually differs from the baked-in HTML
-        // source. Avoids the double-download we used to do on every page load.
-        const source = bgVideo.querySelector('source');
-        if (source && source.getAttribute('src') !== videoSrc) {
-            source.src = videoSrc;
-            bgVideo.load();
-        }
+    if (bgVideo) {
+        // Keep sources as metadata until the user enters the site. This prevents a
+        // background video from competing with the initial page render.
+        if (videoWebmSrc) bgVideo.dataset.videoWebmSrc = videoWebmSrc;
+        if (videoSrc) bgVideo.dataset.videoMp4Src = videoSrc;
     }
 
     const socialContainer = document.getElementById('social-links');
@@ -987,10 +1046,13 @@ function initConfig() {
 
         const fragment = document.createDocumentFragment();
         config.social_links.forEach(link => {
+            const safeUrl = toSafeExternalUrl(link.url);
+            if (!safeUrl) return;
+
             const a = document.createElement('a');
-            a.href = link.url;
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
+            a.href = safeUrl;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
 
             // Use individual neon color or default
             const neonColor = link.neonColor || defaultNeonColor;
@@ -1069,6 +1131,37 @@ function hexToRgbaSafe(hex, alpha) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+function toSafeExternalUrl(value) {
+    if (typeof value !== 'string' || !value.trim()) return null;
+
+    try {
+        const url = new URL(value, window.location.origin);
+        return ['https:', 'http:'].includes(url.protocol) ? url.href : null;
+    } catch {
+        return null;
+    }
+}
+
+function createProjectLink(url, label, isSecondary = false) {
+    const safeUrl = toSafeExternalUrl(url);
+    if (!safeUrl) return null;
+
+    const link = document.createElement('a');
+    link.href = safeUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.className = `project-item-link${isSecondary ? ' secondary' : ''}`;
+
+    const text = document.createElement('span');
+    text.textContent = label || (isSecondary ? 'More' : 'Open project');
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid fa-arrow-up-right-from-square text-[10px]';
+    icon.setAttribute('aria-hidden', 'true');
+
+    link.append(text, icon);
+    return link;
+}
+
 function initProjects(projectsConfig) {
     const button = document.getElementById('projects-btn');
     const list = document.getElementById('projects-list');
@@ -1080,37 +1173,56 @@ function initProjects(projectsConfig) {
     projectsConfig
         .filter(project => project && project.enabled !== false)
         .forEach(project => {
+            const title = project.title || 'Project';
             const item = document.createElement('div');
             item.className = 'project-item';
-            const projectIcon = project.icon
-                ? `<img src="${project.icon}" alt="${project.title || 'Project'} icon" class="project-item-icon">`
-                : `<div class="project-item-icon-fallback"><i class="fa-solid fa-shield-halved text-[13px]"></i></div>`;
-            item.innerHTML = `
-                <div class="project-item-inner">
-                    <div class="project-item-header">
-                        ${projectIcon}
-                        <h4 class="project-item-title">${project.title || 'Project'}</h4>
-                    </div>
-                    <p class="project-item-description">${project.description || ''}</p>
-                    <div class="project-item-actions">
-                        <a href="${project.url || '#'}" target="_blank" rel="noopener noreferrer" class="project-item-link" ${project.url ? '' : 'style="display:none;"'}>
-                            <span>${project.link_text || 'Open project'}</span>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                        </a>
-                        <a href="${project.secondary_url || '#'}" target="_blank" rel="noopener noreferrer" class="project-item-link secondary" ${project.secondary_url ? '' : 'style="display:none;"'}>
-                            <span>${project.secondary_link_text || 'More'}</span>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                        </a>
-                    </div>
-                </div>
-            `;
+
+            const inner = document.createElement('div');
+            inner.className = 'project-item-inner';
+            const header = document.createElement('div');
+            header.className = 'project-item-header';
+
+            if (project.icon) {
+                const projectIcon = document.createElement('img');
+                projectIcon.src = project.icon;
+                projectIcon.alt = `${title} icon`;
+                projectIcon.className = 'project-item-icon';
+                header.appendChild(projectIcon);
+            } else {
+                const fallbackIcon = document.createElement('div');
+                fallbackIcon.className = 'project-item-icon-fallback';
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-shield-halved text-[13px]';
+                icon.setAttribute('aria-hidden', 'true');
+                fallbackIcon.appendChild(icon);
+                header.appendChild(fallbackIcon);
+            }
+
+            const heading = document.createElement('h4');
+            heading.className = 'project-item-title';
+            heading.textContent = title;
+            header.appendChild(heading);
+
+            const description = document.createElement('p');
+            description.className = 'project-item-description';
+            description.textContent = project.description || '';
+            description.style.whiteSpace = 'pre-line';
+
+            const actions = document.createElement('div');
+            actions.className = 'project-item-actions';
+            const primaryLink = createProjectLink(project.url, project.link_text);
+            const secondaryLink = createProjectLink(project.secondary_url, project.secondary_link_text, true);
+            if (primaryLink) actions.appendChild(primaryLink);
+            if (secondaryLink) actions.appendChild(secondaryLink);
+
+            inner.append(header, description, actions);
+            item.appendChild(inner);
             fragment.appendChild(item);
         });
 
     if (!fragment.childNodes.length) return;
 
-    list.innerHTML = '';
-    list.appendChild(fragment);
+    list.replaceChildren(fragment);
     button.classList.remove('hidden');
 }
 
@@ -1126,18 +1238,31 @@ function initProjectsPopup() {
         popup.classList.remove('opacity-0', 'pointer-events-none');
         content.classList.remove('scale-95');
         content.classList.add('scale-100');
+        content.setAttribute('tabindex', '-1');
+        requestAnimationFrame(() => close.focus());
     };
 
     const closePopup = () => {
         popup.classList.add('opacity-0', 'pointer-events-none');
         content.classList.add('scale-95');
         content.classList.remove('scale-100');
+        button.setAttribute('aria-expanded', 'false');
+        button.focus();
     };
 
-    button.addEventListener('click', openPopup);
+    button.setAttribute('aria-haspopup', 'dialog');
+    button.setAttribute('aria-expanded', 'false');
+    button.addEventListener('click', () => {
+        animateClick(button);
+        button.setAttribute('aria-expanded', 'true');
+        openPopup();
+    });
     close.addEventListener('click', closePopup);
     popup.addEventListener('click', (e) => {
         if (e.target === popup) closePopup();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !popup.classList.contains('pointer-events-none')) closePopup();
     });
 
     button.dataset.bound = 'true';
@@ -1280,17 +1405,16 @@ function initTooltips() {
                     if (displayUrl.length > 25) displayUrl = displayUrl.substring(0, 25) + '...';
                     tooltipText.textContent = ">> " + displayUrl;
                 }
-            } catch (e) { tooltipText.textContent = "LINK"; }
+            } catch (_error) { tooltipText.textContent = "LINK"; }
             cursorTooltip.style.opacity = '1';
         });
         link.addEventListener('mouseleave', () => { cursorTooltip.style.opacity = '0'; });
     });
 }
 
-// Context menu + toast + copy-link live in system.js (shared with 404.html). Re-export the
-// toast helper as a local name so the rest of this file keeps using showToast() unchanged.
+// Context menu, toast, and copy helpers live in system.js (shared with 404.html).
 const showToast = (window.MyBioSystem && window.MyBioSystem.showToast) || function () { };
-const handleCopyAction = (window.MyBioSystem && window.MyBioSystem.handleCopyAction) || function () { };
+const copyToClipboard = (window.MyBioSystem && window.MyBioSystem.copyToClipboard) || (() => Promise.resolve(false));
 
 function initSourceCodeLink() {
     const link = document.getElementById('source-code-link');
@@ -1309,6 +1433,22 @@ function animateClick(el) {
     }, 160);
 }
 
+function initDiscordCard() {
+    const card = document.getElementById('discord-card');
+    if (card) card.addEventListener('click', copyDiscordNick);
+}
+
+function initLastFmCopyButton() {
+    const button = document.getElementById('copy-lastfm');
+    if (button) button.addEventListener('click', copyLastFM);
+}
+
+function showCopyResult({ icon, title, message, progressBarColor, timeout = 2000 }, copied) {
+    showToast(copied
+        ? { theme: 'dark', icon, title, message, position: 'topCenter', progressBarColor, timeout }
+        : { theme: 'dark', icon: 'fa-solid fa-triangle-exclamation', title, message: 'Copy is unavailable', position: 'topCenter', progressBarColor: '#f0b232', timeout });
+}
+
 function copyDiscordNick() {
     const el = document.getElementById('discord-card');
     if (el) {
@@ -1316,9 +1456,9 @@ function copyDiscordNick() {
         setTimeout(() => el.style.transform = 'scale(1)', 100);
     }
 
-    const copyId = CONFIG.discord?.copy_id || "User";
-    navigator.clipboard.writeText(copyId).then(() => {
-        showToast({ theme: 'dark', icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', position: 'topCenter', progressBarColor: '#5865F2', timeout: 2000 });
+    const copyId = CONFIG.discord?.copy_id || 'User';
+    copyToClipboard(copyId).then((copied) => {
+        showCopyResult({ icon: 'fa-brands fa-discord', title: 'Discord', message: 'ID is copied', progressBarColor: '#5865F2' }, copied);
     });
 }
 
@@ -1326,8 +1466,8 @@ function copyLastFM() {
     const song = document.getElementById('fm-song-title').textContent;
     const artist = document.getElementById('fm-artist').textContent;
     if (!song || song === "Searching..." || song === "No Data") return;
-    navigator.clipboard.writeText(`${song} - ${artist}`).then(() => {
-        showToast({ theme: 'dark', icon: 'fa-solid fa-music', title: 'Last.fm', message: 'Track name copied', position: 'topCenter', progressBarColor: '#b90000', timeout: 2000 });
+    copyToClipboard(`${song} - ${artist}`).then((copied) => {
+        showCopyResult({ icon: 'fa-solid fa-music', title: 'Last.fm', message: 'Track name copied', progressBarColor: '#b90000' }, copied);
     });
 }
 
@@ -1358,8 +1498,8 @@ function copySpec(type) {
             break;
     }
     if (value && value !== '...') {
-        navigator.clipboard.writeText(value).then(() => {
-            showToast({ theme: 'dark', icon: icon, title: type.toUpperCase(), message: value + ' copied', position: 'topCenter', progressBarColor: '#22c55e', timeout: 2000 });
+        copyToClipboard(value).then((copied) => {
+            showCopyResult({ icon, title: type.toUpperCase(), message: `${value} copied`, progressBarColor: '#22c55e' }, copied);
         });
     }
 }
@@ -1374,21 +1514,18 @@ RAM: ${specs.ram}
 SSD: ${specs.storage}
 PLATFORM: ${specs.platform || 'WINDOWS'}`;
 
-    navigator.clipboard.writeText(allText).then(() => {
-        showToast({
-            theme: 'dark',
+    copyToClipboard(allText).then((copied) => {
+        showCopyResult({
             icon: 'fa-solid fa-copy',
             title: 'SPECS',
             message: 'All specs copied',
-            position: 'topCenter',
             progressBarColor: '#22c55e',
             timeout: 2500
-        });
+        }, copied);
     });
 }
 
-// Reboot screen lives in system.js (shared with 404.html). Inline onclick="triggerReboot()"
-// still works because system.js exposes it as a global.
+// Reboot screen actions are bound by the shared system module.
 
 // Cinematic mode: original was Insert-only; many laptops/Macs lack that key, so accept H too.
 // Skip when the user is typing into a form field.
@@ -1409,6 +1546,33 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
+
+function initBackgroundVideo() {
+    if (!videoBg || videoBg.dataset.loaded === 'true') return;
+    if (prefersReducedMotion() || navigator.connection?.saveData) return;
+
+    const webmSourceUrl = CONFIG.background?.video_webm || videoBg.dataset.videoWebmSrc;
+    const mp4SourceUrl = CONFIG.background?.video || videoBg.dataset.videoMp4Src;
+    if (!webmSourceUrl && !mp4SourceUrl) return;
+
+    if (webmSourceUrl) {
+        const webmSource = document.createElement('source');
+        webmSource.src = webmSourceUrl;
+        webmSource.type = 'video/webm';
+        videoBg.appendChild(webmSource);
+    }
+    if (mp4SourceUrl) {
+        const mp4Source = document.createElement('source');
+        mp4Source.src = mp4SourceUrl;
+        mp4Source.type = 'video/mp4';
+        videoBg.appendChild(mp4Source);
+    }
+    videoBg.dataset.loaded = 'true';
+    videoBg.load();
+
+    const playPromise = videoBg.play();
+    if (playPromise) playPromise.catch(() => { });
+}
 
 // --- SMOOTH VIDEO LOAD ---
 const videoElement = document.getElementById('video-bg');

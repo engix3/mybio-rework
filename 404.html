@@ -86,18 +86,17 @@
                 </div>
 
                 <!-- Return Button -->
-                <div class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex items-center justify-center text-center fade-in-stagger delay-200 hover:bg-[#151515] transition cursor-pointer group shadow-lg relative active:scale-95 duration-200"
-                    onclick="goHome()">
+                <button id="return-home" type="button" class="w-full bg-[#111] rounded-xl p-3 mb-6 border border-white/5 flex items-center justify-center text-center fade-in-stagger delay-200 hover:bg-[#151515] transition cursor-pointer group shadow-lg relative active:scale-95 duration-200">
                     <div
                         class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center rounded-xl z-20">
                         <span class="text-xs font-bold text-white tracking-widest uppercase"><i
                                 class="fa-solid fa-home mr-2"></i>Return Home</span>
                     </div>
 
-                    <div class="z-10 text-sm font-bold text-white">
+                    <span class="z-10 text-sm font-bold text-white">
                         Return to Safety
-                    </div>
-                </div>
+                    </span>
+                </button>
 
             </div> <!-- End Content Wrapper -->
 
@@ -107,7 +106,7 @@
     <!-- Context Menu -->
     <div id="custom-context-menu"
         class="fixed hidden z-[99999] min-w-[150px] glass-menu rounded-lg overflow-hidden border border-white/10 p-1 flex-col gap-1">
-        <button class="menu-item" onclick="handleCopyAction()">
+        <button id="context-copy-action" type="button" class="menu-item">
             <i class="fa-solid fa-link text-xs w-5 text-center"></i>
             <span id="context-copy-text">Copy Link</span>
         </button>
@@ -115,7 +114,7 @@
             <i class="fa-brands fa-github text-xs w-5 text-center"></i> Source Code
         </a>
         <div class="h-[1px] bg-white/10 w-full my-0.5"></div>
-        <button class="menu-item text-red-400 hover:text-red-300" onclick="triggerReboot(() => window.location.href = 'index.html')">
+        <button id="context-reboot-action" type="button" data-reboot-redirect="index.html" class="menu-item text-red-400 hover:text-red-300">
             <i class="fa-solid fa-rotate-right text-xs w-5 text-center"></i> Restart System
         </button>
     </div>
@@ -151,11 +150,14 @@
             }, 100);
 
             initSpotlight();
-        });
 
-        function goHome() {
-            window.location.href = 'index.html';
-        }
+            const returnHomeButton = document.getElementById('return-home');
+            if (returnHomeButton) {
+                returnHomeButton.addEventListener('click', () => {
+                    window.location.assign('index.html');
+                });
+            }
+        });
 
         function initSpotlight() {
             const card = document.querySelector('.glass-card');
