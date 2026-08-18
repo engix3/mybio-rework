@@ -1220,3 +1220,11 @@ body .iziToast-wrapper .iziToast-body p {
         transform: none !important;
     }
 }
+
+/* Keyboard navigation: preserve the visual style while exposing the current focus target. */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+    outline: 2px solid rgba(134, 239, 172, 0.95);
+    outline-offset: 3px;
+}

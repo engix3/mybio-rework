@@ -42,6 +42,8 @@ window.CONFIG = {
     // Background settings
     background: {
         poster: "image/bg-poster.webp",
+        // Modern browsers receive this compact format first; MP4 is retained as a fallback.
+        video_webm: "video/hatsune-miku-nostalgic-night-moewalls-com-1080p.webm",
         video: "video/hatsune-miku-nostalgic-night-moewalls-com.mp4"
     },
 
