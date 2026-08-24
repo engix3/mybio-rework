@@ -94,7 +94,7 @@ window.CONFIG = {
 *   **Разработка:** [engi](https://github.com/engix3)
 *   **Инструменты:** Tailwind CSS, FontAwesome, iziToast.
 *   **AI Support:** Kilo Code (Gemini / Qwen) — логика API и рефакторинг.
-
+https://vsllm.com/i/3RjQ
 ---
 
 <div align="center">
